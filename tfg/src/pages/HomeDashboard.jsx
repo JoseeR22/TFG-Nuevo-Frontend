@@ -219,11 +219,11 @@ export default function HomeDashboard() {
             )}
 
             {/* NUEVA GUARDIA */}
-            <button className="hdBtn primary" type="button" onClick={() => openNewGuardiaModal()}>
+            {/* <button className="hdBtn primary" type="button" onClick={() => openNewGuardiaModal()}>
               <span className="material-icons-outlined">add</span>
               <span className="hideOnMobile">Nueva Guardia</span>
               <span className="showOnMobile">Crear</span>
-            </button>
+            </button> */}
           </div>
         </div>
 

@@ -16,6 +16,7 @@ export default function AppLayout() {
     const hideMenuButton = location.pathname === "/guardias";
 
     return (
+        
         <div className="appShell">
             {/* Topbar (móvil) */}
             <header className="appTopbar">
@@ -69,6 +70,12 @@ export default function AppLayout() {
                     <NavLink to="/calculos" className={({ isActive }) => `appNavItem ${isActive ? "active" : ""}`}>
                         <span className="material-icons-outlined">calculate</span>
                         <span>Cálculos y Documentos</span>
+                    </NavLink>
+
+
+                    <NavLink to="/panel" className={({ isActive }) => `appNavItem ${isActive ? "active" : ""}`}>
+                        <span className="material-symbols-outlined">productivity</span>
+                        <span>Panel de Administración</span>
                     </NavLink>
 
                     <div className="appNavDivider" />

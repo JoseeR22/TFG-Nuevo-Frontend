@@ -4,6 +4,7 @@ import Login from "../pages/Login";
 import HomeDashboard from "../pages/HomeDashboard";
 import GestionGuardias from "../pages/GestionGuardias";
 import CalculosDocumentos from "../pages/CalculosDocumentos";
+import PanelAdministracion from "../pages/PanelAdministración";
 import AppLayout from "../layout/AppLayout";
 
 function isAuthed() {
@@ -33,6 +34,7 @@ export default function AppRouter() {
                 <Route path="/home" element={<HomeDashboard />} />
                 <Route path="/guardias" element={<GestionGuardias />} />
                 <Route path="/calculos" element={<CalculosDocumentos />} />
+                <Route path="/panelAdmin" element={<PanelAdministracion />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/home" replace />} />

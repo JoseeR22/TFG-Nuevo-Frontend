@@ -73,7 +73,7 @@ export default function AppLayout() {
                     </NavLink>
 
 
-                    <NavLink to="/panel" className={({ isActive }) => `appNavItem ${isActive ? "active" : ""}`}>
+                    <NavLink to="/panelAdmin" className={({ isActive }) => `appNavItem ${isActive ? "active" : ""}`}>
                         <span className="material-symbols-outlined">productivity</span>
                         <span>Panel de Administración</span>
                     </NavLink>

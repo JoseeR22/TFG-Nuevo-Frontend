@@ -258,6 +258,7 @@ export default function GestionGuardias() {
                 </label>
               </div>
             </div>
+            
 
             <div className="modalFooter">
               <button className="btnPrimary" onClick={() => setIsModalOpen(false)} type="button">

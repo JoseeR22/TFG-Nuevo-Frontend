@@ -361,6 +361,3 @@ export default function PanelAdministracion() {
 
 
 }
-
-
-

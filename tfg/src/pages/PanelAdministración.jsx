@@ -86,7 +86,7 @@ export default function PanelAdministracion() {
     }
 
     function addGuardia() {
-        // Construir start: si allDay => "YYYY-MM-DD" / si no => "YYYY-MM-DDTHH:mm:00"
+        // Construir start: si allDay "YYYY-MM-DD" / si no "YYYY-MM-DDTHH:mm:00"
         const start = newAllDay ? newDate : `${newDate}T${newTime}:00`;
 
         // Título estilo chip
@@ -347,17 +347,42 @@ export default function PanelAdministracion() {
                     </div>
                 </div>
             </section>
+
+            <section>
+                {/* Acciones */}
+                <div className="cdActions">
+                    <button
+                        className="cdBtnSecondary"
+                        type="button"
+                        onClick={() => downloadMock("informe.pdf")}
+                    >
+                        <span className="material-icons">picture_as_pdf</span>
+                        Descargar PDF
+                    </button>
+
+                    <div className="cdActionsGrid">
+                        <button
+                            className="cdBtnGhost"
+                            type="button"
+                            onClick={() => downloadMock("resumen.xlsx")}
+                        >
+                            <span className="material-icons excel">table_view</span>
+                            Excel
+                        </button>
+
+                        <button
+                            className="cdBtnGhost"
+                            type="button"
+                            onClick={() => alert("Mock: Enviado por correo")}
+                        >
+                            <span className="material-icons email">email</span>
+                            Correo
+                        </button>
+                    </div>
+                </div>
+            </section>
         </div>
 
 
-
-
-
-
-
     );
-
-
-
-
 }

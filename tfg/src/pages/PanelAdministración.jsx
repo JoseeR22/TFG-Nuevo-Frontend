@@ -116,6 +116,71 @@ export default function PanelAdministracion() {
         }
     }, [newType]);
 
+
+    //apartado subir pdf al backend
+    const pdfInputRef = useRef(null);
+    const excelInputRef = useRef(null);
+
+    const [uploading, setUploading] = useState(false);
+    const [uploadMsg, setUploadMsg] = useState("");
+
+    const API_BASE = "";
+
+    async function uploadFile(file, tipo) {
+        if (!file) return;
+
+        //validaciones simples para empezar
+
+        const maxMB = 10;
+        if (file.size > maxMB * 1024 * 1024) {
+            setUploadMsg(`El archivo supera ${maxMB}MB`);// archivo demasiado grande
+            return;
+        }
+        setUploading(true);
+        setUploadMsg("");
+
+        try {
+            const formData = new FormData();
+            formData.append("file", file);  //da nombre file al paquete 
+            formData.append("tipo", tipo); //por si queremos enviar metadata
+            //minibloque de preparar paquete para enviar. se supone que Laravel lee request('tipo')
+
+            const res = await fetch(`${API_BASE}/api/documentos/upload`, {//AQUI LA URL PRRO
+                method: "POST",
+                body: formData, //importante no poner manualmente Content-type, el navegador calcula ya perfe
+
+                // Si usáis cookies/sesión (Sanctum SPA), descomenta:
+                // credentials: "include",
+            });
+
+            if (!res.ok) {
+                const text = await res.text(); //si respuesta no esta bien intenta leerla como texto en el error
+                throw new Error(text || `Error HTTP ${res.status}`); //directo al catch si da error
+            }//si respuesta es ok(codigos 200 y tal) se devuelve true si no (codigos 400 y tal) se devuelve false
+
+            const data = await res.json();
+            setUploadMsg(`Subido: ${data?.filename ?? file.name}`);
+        } catch (e) {
+            setUploadMsg(`Error al subir: ${e.message}`);
+        } finally {
+            setUploading(false);
+        }
+    }
+
+    function onPickPdf(e) {
+        const file = e.target.files?.[0];
+        e.target.value = ""; // permite elegir el mismo archivo otra vez
+        uploadFile(file, "pdf");
+    }
+
+    function onPickExcel(e) {
+        const file = e.target.files?.[0];
+        e.target.value = "";
+        uploadFile(file, "excel");
+    }
+
+    //fin apartado subir archivo
+
     return (
 
         <div className="hdContent">
@@ -347,24 +412,44 @@ export default function PanelAdministracion() {
                     </div>
                 </div>
             </section>
+            <br />
 
             <section>
+                {/* Inputs ocultos para subir archivos */}
+                <input
+                    ref={pdfInputRef}
+                    type="file"
+                    accept="application/pdf"
+                    style={{ display: "none" }}
+                    onChange={onPickPdf}
+                />
+
+                <input
+                    ref={excelInputRef}
+                    type="file"
+                    accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    style={{ display: "none" }}
+                    onChange={onPickExcel}
+                />
+
                 {/* Acciones */}
                 <div className="cdActions">
                     <button
                         className="cdBtnSecondary"
                         type="button"
-                        onClick={() => downloadMock("informe.pdf")}
+                        disabled={uploading}
+                        onClick={() => pdfInputRef.current?.click()}
                     >
                         <span className="material-icons">picture_as_pdf</span>
-                        Descargar PDF
+                        {uploading ? "Subiendo..." : "Enviar PDF"}
                     </button>
 
                     <div className="cdActionsGrid">
                         <button
                             className="cdBtnGhost"
                             type="button"
-                            onClick={() => downloadMock("resumen.xlsx")}
+                            disabled={uploading}
+                            onClick={() => excelInputRef.current?.click()}
                         >
                             <span className="material-icons excel">table_view</span>
                             Excel
@@ -379,6 +464,8 @@ export default function PanelAdministracion() {
                             Correo
                         </button>
                     </div>
+
+                    {uploadMsg && <p style={{ marginTop: 10 }}>{uploadMsg}</p>}
                 </div>
             </section>
         </div>

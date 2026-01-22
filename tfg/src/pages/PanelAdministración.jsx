@@ -63,7 +63,7 @@ export default function PanelAdministracion() {
     // ===== Estado editable de eventos (aquí añadimos nuevas guardias) =====
     const [events, setEvents] = useState(baseEvents);
 
-    // ===== FILTROS =====
+    // FILTROS
     const [filterOpen, setFilterOpen] = useState(false);
     const [filterType, setFilterType] = useState("ALL"); // ALL | CA | PF | LOC
 
@@ -72,7 +72,7 @@ export default function PanelAdministracion() {
         return events.filter((e) => e.extendedProps?.type === filterType);
     }, [events, filterType]);
 
-    // ===== MODAL NUEVA GUARDIA =====
+    // MODAL NUEVA GUARDIA 
     const [newOpen, setNewOpen] = useState(false);
     const [newType, setNewType] = useState("CA");          // CA | PF | LOC
     const [newDate, setNewDate] = useState("2024-04-01");  // YYYY-MM-DD
@@ -80,18 +80,13 @@ export default function PanelAdministracion() {
     const [newAllDay, setNewAllDay] = useState(false);     // para PF 24h / etc
 
     function openNewGuardiaModal(prefilledDate) {
-        // Si haces click en día, lo prellenamos
         if (prefilledDate) setNewDate(prefilledDate);
         setNewOpen(true);
     }
 
     function addGuardia() {
-        // Construir start: si allDay "YYYY-MM-DD" / si no "YYYY-MM-DDTHH:mm:00"
         const start = newAllDay ? newDate : `${newDate}T${newTime}:00`;
-
-        // Título estilo chip
         const title = newAllDay ? `${newType} 24h` : `${newType} ${newTime}`;
-
         const id = crypto?.randomUUID ? crypto.randomUUID() : String(Date.now());
 
         setEvents((prev) => [
@@ -108,81 +103,228 @@ export default function PanelAdministracion() {
         setNewOpen(false);
     }
 
-    // Si eliges PF y marcas allDay, tiene sentido por defecto
     useEffect(() => {
         if (newType === "PF") {
-            // no forzamos, pero podrías activar esto si quieres:
             // setNewAllDay(true);
         }
     }, [newType]);
 
+    //Modal para enviar excel
 
-    //apartado subir pdf al backend
-    const pdfInputRef = useRef(null);
-    const excelInputRef = useRef(null);
+    // Endpoints
+    const SPECIALITIES_URL = "https://daw11.arenadaw.com.es/api/speciality";
+    const UPLOAD_URL = "https://daw11.arenadaw.com.es/api/importDutys";
 
-    const [uploading, setUploading] = useState(false);
-    const [uploadMsg, setUploadMsg] = useState("");
+    // Estado modal
+    const [importOpen, setImportOpen] = useState(false);
 
-    const API_BASE = "";
+    // Especialidades (para el select)
+    const [specialities, setSpecialities] = useState([]);
+    const [specialitiesLoading, setSpecialitiesLoading] = useState(false);
+    const [specialitiesError, setSpecialitiesError] = useState("");
 
-    async function uploadFile(file, tipo) {
+    // Campos requeridos por el backend
+    const [idSpeciality, setIdSpeciality] = useState("");
+    const [importMonth, setImportMonth] = useState("01");
+    const [importYear, setImportYear] = useState("2026");
+
+    // Archivo Excel
+    const [excelFile, setExcelFile] = useState(null);
+    const fileInputRef = useRef(null);
+
+    // UX
+    const [isDragging, setIsDragging] = useState(false);
+    const [importUploading, setImportUploading] = useState(false);
+    const [importMsg, setImportMsg] = useState("");
+
+    const months = useMemo(() => ([
+        { value: "01", label: "Enero" },
+        { value: "02", label: "Febrero" },
+        { value: "03", label: "Marzo" },
+        { value: "04", label: "Abril" },
+        { value: "05", label: "Mayo" },
+        { value: "06", label: "Junio" },
+        { value: "07", label: "Julio" },
+        { value: "08", label: "Agosto" },
+        { value: "09", label: "Septiembre" },
+        { value: "10", label: "Octubre" },
+        { value: "11", label: "Noviembre" },
+        { value: "12", label: "Diciembre" },
+    ]), []);
+
+    const years = useMemo(() => {
+        const start = 2020;
+        const end = 2030;
+        // para que no se envien años raretes
+        const arr = [];
+        for (let y = start; y <= end; y++) arr.push(String(y));
+        return arr;
+    }, []);
+
+    function getMonthYearFromCalendar() {
+        const api = calendarRef.current?.getApi();
+        const d = api?.getDate() ?? new Date();
+        const year = String(d.getFullYear());
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        return { year, month };
+    }
+
+    function isExcelFile(file) {
+        const name = (file?.name || "").toLowerCase();
+        const hasExt = name.endsWith(".xls") || name.endsWith(".xlsx");
+
+        // A veces file.type viene vacío dependiendo del navegador/sistema,
+        // por eso permitimos ext O mime.
+        const allowedMimes = [
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ];
+        const hasMime = allowedMimes.includes(file?.type);
+
+        return hasExt || hasMime;
+    }
+
+    async function openImportModal() {
+        // Prefill mes/año del calendario
+        const { year, month } = getMonthYearFromCalendar();
+        setImportYear(years.includes(year) ? year : years[years.length - 1]);
+        setImportMonth(month);
+
+        // Reset UI modal
+        setImportMsg("");
+        setExcelFile(null);
+        setIdSpeciality("");
+        setImportOpen(true);
+
+        // Cargar especialidades
+        setSpecialitiesLoading(true);
+        setSpecialitiesError("");
+        try {
+            const res = await fetch(SPECIALITIES_URL);
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.mistake || data?.error || `HTTP ${res.status}`);
+
+            // Opcional: si tiene "active", filtramos activas
+            const list = Array.isArray(data) ? data.filter(s => s.active !== false) : [];
+            setSpecialities(list);
+        } catch (e) {
+            setSpecialitiesError(e.message);
+        } finally {
+            setSpecialitiesLoading(false);
+        }
+    }
+
+    function closeImportModal() {
+        setImportOpen(false);
+        setIsDragging(false);
+    }
+
+    function onPickExcelFile(e) {
+        const file = e.target.files?.[0];
+        e.target.value = "";
         if (!file) return;
 
-        //validaciones simples para empezar
-
-        const maxMB = 10;
-        if (file.size > maxMB * 1024 * 1024) {
-            setUploadMsg(`El archivo supera ${maxMB}MB`);// archivo demasiado grande
+        if (!isExcelFile(file)) {
+            setImportMsg("Solo se permiten archivos .xls o .xlsx");
+            setExcelFile(null);
             return;
         }
-        setUploading(true);
-        setUploadMsg("");
+
+        setExcelFile(file);
+        setImportMsg("");
+    }
+
+    function onDragOver(e) {
+        e.preventDefault();
+        setIsDragging(true);
+    }
+
+    function onDragLeave(e) {
+        e.preventDefault();
+        setIsDragging(false);
+    }
+
+    function onDrop(e) {
+        e.preventDefault();
+        setIsDragging(false);
+
+        const file = e.dataTransfer.files?.[0];
+        if (!file) return;
+
+        if (!isExcelFile(file)) {
+            setImportMsg("Solo se permiten archivos .xls o .xlsx");
+            setExcelFile(null);
+            return;
+        }
+
+        setExcelFile(file);
+        setImportMsg("");
+    }
+
+    //validaciones al subir el excel
+    async function submitImport() {
+        if (!excelFile) {
+            setImportMsg("Debes adjuntar un archivo Excel.");
+            return;
+        }
+        if (!idSpeciality) {
+            setImportMsg("Debes seleccionar una especialidad.");
+            return;
+        }
+        if (!importYear || !importMonth) {
+            setImportMsg("Debes seleccionar año y mes.");
+            return;
+        }
+
+        const maxMB = 10;
+        if (excelFile.size > maxMB * 1024 * 1024) {
+            setImportMsg(`El archivo supera ${maxMB}MB`);
+            return;
+        }
+
+        setImportUploading(true);
+        setImportMsg("");
 
         try {
             const formData = new FormData();
-            formData.append("file", file);  //da nombre file al paquete 
-            formData.append("tipo", tipo); //por si queremos enviar metadata
-            //minibloque de preparar paquete para enviar. se supone que Laravel lee request('tipo')
+            formData.append("file", excelFile);
+            formData.append("year", String(importYear));
+            formData.append("month", String(importMonth).padStart(2, "0"));
+            formData.append("idSpeciality", String(idSpeciality));
 
-            const res = await fetch(`${API_BASE}/api/documentos/upload`, {//AQUI LA URL PRRO
+            const res = await fetch(UPLOAD_URL, {
                 method: "POST",
-                body: formData, //importante no poner manualmente Content-type, el navegador calcula ya perfe
-
-                // Si usáis cookies/sesión (Sanctum SPA), descomenta:
-                // credentials: "include",
+                body: formData,
+                // credentials: "include", // si usáis cookies/sesión (Sanctum SPA)
             });
 
-            if (!res.ok) {
-                const text = await res.text(); //si respuesta no esta bien intenta leerla como texto en el error
-                throw new Error(text || `Error HTTP ${res.status}`); //directo al catch si da error
-            }//si respuesta es ok(codigos 200 y tal) se devuelve true si no (codigos 400 y tal) se devuelve false
+            // Leer respuesta 1 sola vez
+            const contentType = res.headers.get("content-type") || "";
+            const payload = contentType.includes("application/json")
+                ? await res.json()
+                : await res.text();
 
-            const data = await res.json();
-            setUploadMsg(`Subido: ${data?.filename ?? file.name}`);
+            if (!res.ok) {
+                const msg =
+                    typeof payload === "string"
+                        ? payload
+                        : (payload?.mistake || payload?.error || payload?.message || `HTTP ${res.status}`);
+                throw new Error(msg);
+            }
+
+            setImportMsg("Excel importado correctamente");
+            // Si quieres cerrar automático:
+            // setImportOpen(false);
         } catch (e) {
-            setUploadMsg(`Error al subir: ${e.message}`);
+            setImportMsg(`Error al subir: ${e.message}`);
         } finally {
-            setUploading(false);
+            setImportUploading(false);
         }
     }
 
-    function onPickPdf(e) {
-        const file = e.target.files?.[0];
-        e.target.value = ""; // permite elegir el mismo archivo otra vez
-        uploadFile(file, "pdf");
-    }
-
-    function onPickExcel(e) {
-        const file = e.target.files?.[0];
-        e.target.value = "";
-        uploadFile(file, "excel");
-    }
-
-    //fin apartado subir archivo
+    // =========================================================
 
     return (
-
         <div className="hdContent">
             {/* Header escritorio */}
             <div className="hdDesktopHeader">
@@ -261,22 +403,30 @@ export default function PanelAdministracion() {
 
                         {filterOpen && (
                             <div className="hdFilterMenu" role="menu">
-                                <button type="button" className={`hdFilterItem ${filterType === "ALL" ? "active" : ""}`}
+                                <button
+                                    type="button"
+                                    className={`hdFilterItem ${filterType === "ALL" ? "active" : ""}`}
                                     onClick={() => { setFilterType("ALL"); setFilterOpen(false); }}
                                 >
                                     Todos
                                 </button>
-                                <button type="button" className={`hdFilterItem ${filterType === "CA" ? "active" : ""}`}
+                                <button
+                                    type="button"
+                                    className={`hdFilterItem ${filterType === "CA" ? "active" : ""}`}
                                     onClick={() => { setFilterType("CA"); setFilterOpen(false); }}
                                 >
                                     Continuidad (CA)
                                 </button>
-                                <button type="button" className={`hdFilterItem ${filterType === "PF" ? "active" : ""}`}
+                                <button
+                                    type="button"
+                                    className={`hdFilterItem ${filterType === "PF" ? "active" : ""}`}
                                     onClick={() => { setFilterType("PF"); setFilterOpen(false); }}
                                 >
                                     Presencia Física (PF)
                                 </button>
-                                <button type="button" className={`hdFilterItem ${filterType === "LOC" ? "active" : ""}`}
+                                <button
+                                    type="button"
+                                    className={`hdFilterItem ${filterType === "LOC" ? "active" : ""}`}
                                     onClick={() => { setFilterType("LOC"); setFilterOpen(false); }}
                                 >
                                     Localizada (LOC)
@@ -285,11 +435,11 @@ export default function PanelAdministracion() {
                         )}
 
                         {/* NUEVA GUARDIA */}
-                        {<button className="hdBtn primary" type="button" onClick={() => openNewGuardiaModal()}>
+                        <button className="hdBtn primary" type="button" onClick={() => openNewGuardiaModal()}>
                             <span className="material-icons-outlined">add</span>
                             <span className="hideOnMobile">Nueva Guardia</span>
                             <span className="showOnMobile">Crear</span>
-                        </button>}
+                        </button>
                     </div>
                 </div>
 
@@ -324,7 +474,6 @@ export default function PanelAdministracion() {
                                 );
                             }}
                             dateClick={(info) => {
-                                // click en día -> abre modal y prellena fecha
                                 openNewGuardiaModal(info.dateStr);
                             }}
                             eventClick={(info) => {
@@ -412,64 +561,157 @@ export default function PanelAdministracion() {
                     </div>
                 </div>
             </section>
+
             <br />
 
+            {/* SECCIÓN IMPORTAR EXCEL*/}
             <section>
-                {/* Inputs ocultos para subir archivos */}
-                <input
-                    ref={pdfInputRef}
-                    type="file"
-                    accept="application/pdf"
-                    style={{ display: "none" }}
-                    onChange={onPickPdf}
-                />
-
-                <input
-                    ref={excelInputRef}
-                    type="file"
-                    accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    style={{ display: "none" }}
-                    onChange={onPickExcel}
-                />
-
-                {/* Acciones */}
                 <div className="cdActions">
                     <button
                         className="cdBtnSecondary"
                         type="button"
-                        disabled={uploading}
-                        onClick={() => pdfInputRef.current?.click()}
+                        onClick={openImportModal}
                     >
-                        <span className="material-icons">picture_as_pdf</span>
-                        {uploading ? "Subiendo..." : "Enviar PDF"}
+                        <span className="material-icons excel">table_view</span>
+                        Importar Excel
                     </button>
-
-                    <div className="cdActionsGrid">
-                        <button
-                            className="cdBtnGhost"
-                            type="button"
-                            disabled={uploading}
-                            onClick={() => excelInputRef.current?.click()}
-                        >
-                            <span className="material-icons excel">table_view</span>
-                            Excel
-                        </button>
-
-                        <button
-                            className="cdBtnGhost"
-                            type="button"
-                            onClick={() => alert("Mock: Enviado por correo")}
-                        >
-                            <span className="material-icons email">email</span>
-                            Correo
-                        </button>
-                    </div>
-
-                    {uploadMsg && <p style={{ marginTop: 10 }}>{uploadMsg}</p>}
                 </div>
             </section>
+
+            {/* MODAL IMPORTAR EXCEL */}
+            {importOpen && (
+                <div className="hdModalOverlay" role="dialog" aria-modal="true">
+                    <div className="hdModalCard">
+                        <div className="hdModalHead">
+                            <div className="hdModalTitle">Importar guardias desde Excel</div>
+                            <button
+                                className="hdModalClose"
+                                type="button"
+                                onClick={closeImportModal}
+                                aria-label="Cerrar"
+                            >
+                                <span className="material-icons-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <div className="hdModalBody">
+                            {/* Especialidad */}
+                            <label className="hdField">
+                                <span>Especialidad</span>
+
+                                {specialitiesLoading ? (
+                                    <div className="hdControl">Cargando especialidades...</div>
+                                ) : specialitiesError ? (
+                                    <div className="hdControl">{specialitiesError}</div>
+                                ) : (
+                                    <select
+                                        className="hdControl"
+                                        value={idSpeciality}
+                                        onChange={(e) => setIdSpeciality(e.target.value)}
+                                    >
+                                        <option value="">-- Selecciona una especialidad --</option>
+                                        {specialities.map((s) => (
+                                            <option key={s.id} value={s.id}>
+                                                {s.name} (id: {s.id})
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
+                            </label>
+
+                            {/* Mes / Año con SELECT */}
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                                <label className="hdField">
+                                    <span>Mes</span>
+                                    <select
+                                        className="hdControl"
+                                        value={importMonth}
+                                        onChange={(e) => setImportMonth(e.target.value)}
+                                    >
+                                        {months.map((m) => (
+                                            <option key={m.value} value={m.value}>
+                                                {m.label} ({m.value})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+
+                                <label className="hdField">
+                                    <span>Año</span>
+                                    <select
+                                        className="hdControl"
+                                        value={importYear}
+                                        onChange={(e) => setImportYear(e.target.value)}
+                                    >
+                                        {years.map((y) => (
+                                            <option key={y} value={y}>
+                                                {y}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+                            </div>
+
+                            {/* Input oculto */}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                style={{ display: "none" }}
+                                onChange={onPickExcelFile}
+                            />
+
+                            {/* Dropzone */}
+                            <div
+                                onDragOver={onDragOver}
+                                onDragLeave={onDragLeave}
+                                onDrop={onDrop}
+                                onClick={() => fileInputRef.current?.click()}
+                                style={{
+                                    marginTop: 12,
+                                    border: `2px dashed ${isDragging ? "#888" : "#ccc"}`,
+                                    borderRadius: 12,
+                                    padding: 16,
+                                    cursor: "pointer",
+                                    textAlign: "center",
+                                    userSelect: "none",
+                                }}
+                                title="Arrastra Excel o haz clic para seleccionarlo"
+                            >
+                                <div style={{ fontWeight: 600 }}>
+                                    Arrastra aquí tu Excel (.xls / .xlsx)
+                                </div>
+                                <div style={{ marginTop: 6, opacity: 0.8 }}>
+                                    o haz clic para seleccionarlo
+                                </div>
+
+                                {excelFile && (
+                                    <div style={{ marginTop: 10 }}>
+                                        Archivo: <b>{excelFile.name}</b>
+                                    </div>
+                                )}
+                            </div>
+
+                            {importMsg && <p style={{ marginTop: 12 }}>{importMsg}</p>}
+                        </div>
+
+                        <div className="hdModalFooter">
+                            <button className="hdBtn light" type="button" onClick={closeImportModal}>
+                                Cancelar
+                            </button>
+
+                            <button
+                                className="hdBtn primary"
+                                type="button"
+                                disabled={importUploading}
+                                onClick={submitImport}
+                            >
+                                {importUploading ? "Subiendo..." : "Importar"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-
-
     );
 }

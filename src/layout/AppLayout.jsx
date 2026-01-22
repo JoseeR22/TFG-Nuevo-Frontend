@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import "../styles/AppLayout.css";
 import Header from "../components/Header";
@@ -13,8 +13,8 @@ export default function AppLayout() {
         navigate("/login");
     }
 
-    const location = useLocation();
-    const hideMenuButton = location.pathname === "/guardias";
+    
+    
 
     return (
         

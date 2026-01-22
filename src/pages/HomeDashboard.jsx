@@ -3,6 +3,7 @@ import "../styles/HomeDashboard.css";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import Header from "../components/Header";
 
 export default function HomeDashboard() {
   const stats = useMemo(
@@ -119,21 +120,7 @@ export default function HomeDashboard() {
   return (
     <div className="hdContent">
       {/* Header escritorio */}
-      <div className="hdDesktopHeader">
-        <div className="hdBreadcrumb">
-          <span className="material-icons-outlined">home</span>
-          <span>/</span>
-          <span className="hdBreadcrumbStrong">Gestión de Guardias</span>
-        </div>
-
-        <div className="hdUser">
-          <div className="hdUserInfo">
-            <div className="hdUserName">Juan Perez</div>
-            <div className="hdUserRole">Administrador</div>
-          </div>
-          <div className="hdUserAvatar">JP</div>
-        </div>
-      </div>
+     <Header />
 
       {/* Header móvil dentro del contenido */}
       <div className="hdMobileHeader">

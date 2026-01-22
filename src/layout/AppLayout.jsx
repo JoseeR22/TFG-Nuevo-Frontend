@@ -26,7 +26,7 @@ export default function AppLayout() {
             <div className={`appOverlay ${open ? "show" : ""}`} onClick={() => setOpen(false)} />
 
             {/* Sidebar */}
-            <aside className={`appSidebar ${open ? "open" : ""}`}>
+            <aside  className={`appSidebar ${open ? "open" : ""}`}>
                 <div className="appSidebarBrand">
                     <svg className="appSidebarLogo" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M12 2L2 22h20L12 2zm0 3.8L18.4 20H5.6L12 5.8z"></path>

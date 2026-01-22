@@ -103,6 +103,7 @@ body {
     top: 0;
     bottom: 0;
     left: 0;
+
     width: 288px;
     background: var(--appPrimary);
     color: #fff;
@@ -220,11 +221,16 @@ body {
         display: none;
     }
 
-    .appSidebar {
-        position: static;
-        transform: none;
-        box-shadow: none;
-    }
+@media (min-width: 1024px) {
+  .appSidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
 
     .closeOnlyMobile {
         display: none;

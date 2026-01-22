@@ -1,5 +1,6 @@
 import "../styles/PanelAdministracion.css";
 import { useMemo, useRef, useState, useEffect } from "react";
+import { getSpecialities, importDutysExcel, isExcelFile } from "../services/importExcelService";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -63,7 +64,7 @@ export default function PanelAdministracion() {
     // ===== Estado editable de eventos (aquí añadimos nuevas guardias) =====
     const [events, setEvents] = useState(baseEvents);
 
-    //  FILTROS 
+    // ===== FILTROS =====
     const [filterOpen, setFilterOpen] = useState(false);
     const [filterType, setFilterType] = useState("ALL"); // ALL | CA | PF | LOC
 
@@ -72,7 +73,7 @@ export default function PanelAdministracion() {
         return events.filter((e) => e.extendedProps?.type === filterType);
     }, [events, filterType]);
 
-    // ===== MODAL NUEVA GUARDIA =====
+    // MODAL NUEVA GUARDIA
     const [newOpen, setNewOpen] = useState(false);
     const [newType, setNewType] = useState("CA");          // CA | PF | LOC
     const [newDate, setNewDate] = useState("2024-04-01");  // YYYY-MM-DD
@@ -80,18 +81,13 @@ export default function PanelAdministracion() {
     const [newAllDay, setNewAllDay] = useState(false);     // para PF 24h / etc
 
     function openNewGuardiaModal(prefilledDate) {
-        // Si haces click en día, lo prellenamos
         if (prefilledDate) setNewDate(prefilledDate);
         setNewOpen(true);
     }
 
     function addGuardia() {
-        // Construir start: si allDay => "YYYY-MM-DD" / si no => "YYYY-MM-DDTHH:mm:00"
         const start = newAllDay ? newDate : `${newDate}T${newTime}:00`;
-
-        // Título estilo chip
         const title = newAllDay ? `${newType} 24h` : `${newType} ${newTime}`;
-
         const id = crypto?.randomUUID ? crypto.randomUUID() : String(Date.now());
 
         setEvents((prev) => [
@@ -108,16 +104,174 @@ export default function PanelAdministracion() {
         setNewOpen(false);
     }
 
-    // Si eliges PF y marcas allDay, tiene sentido por defecto
     useEffect(() => {
         if (newType === "PF") {
-            // no forzamos, pero podrías activar esto si quieres:
             // setNewAllDay(true);
         }
     }, [newType]);
 
-    return (
+    // =========================================================
+    // ✅ IMPORTAR EXCEL (REFACTORIZADO A SERVICES)
+    // =========================================================
 
+    // Estado modal
+    const [importOpen, setImportOpen] = useState(false);
+
+    // Especialidades (para el select)
+    const [specialities, setSpecialities] = useState([]);
+    const [specialitiesLoading, setSpecialitiesLoading] = useState(false);
+    const [specialitiesError, setSpecialitiesError] = useState("");
+
+    // Campos requeridos por el backend
+    const [idSpeciality, setIdSpeciality] = useState("");
+    const [importMonth, setImportMonth] = useState("01");
+    const [importYear, setImportYear] = useState("2026");
+
+    // Archivo Excel
+    const [excelFile, setExcelFile] = useState(null);
+    const fileInputRef = useRef(null);
+
+    // UX
+    const [isDragging, setIsDragging] = useState(false);
+    const [importUploading, setImportUploading] = useState(false);
+    const [importMsg, setImportMsg] = useState("");
+
+    const months = useMemo(() => ([
+        { value: "01", label: "Enero" },
+        { value: "02", label: "Febrero" },
+        { value: "03", label: "Marzo" },
+        { value: "04", label: "Abril" },
+        { value: "05", label: "Mayo" },
+        { value: "06", label: "Junio" },
+        { value: "07", label: "Julio" },
+        { value: "08", label: "Agosto" },
+        { value: "09", label: "Septiembre" },
+        { value: "10", label: "Octubre" },
+        { value: "11", label: "Noviembre" },
+        { value: "12", label: "Diciembre" },
+    ]), []);
+
+    const years = useMemo(() => {
+        const start = 2020;
+        const end = 2030;
+        const arr = [];
+        for (let y = start; y <= end; y++) arr.push(String(y));
+        return arr;
+    }, []);
+
+    function getMonthYearFromCalendar() {
+        const api = calendarRef.current?.getApi();
+        const d = api?.getDate() ?? new Date();
+        const year = String(d.getFullYear());
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        return { year, month };
+    }
+
+    async function openImportModal() {
+        // Prefill mes/año del calendario
+        const { year, month } = getMonthYearFromCalendar();
+        setImportYear(years.includes(year) ? year : years[years.length - 1]);
+        setImportMonth(month);
+
+        // Reset UI modal
+        setImportMsg("");
+        setExcelFile(null);
+        setIdSpeciality("");
+        setImportOpen(true);
+
+        // Cargar especialidades desde SERVICE
+        setSpecialitiesLoading(true);
+        setSpecialitiesError("");
+        try {
+            const list = await getSpecialities({ onlyActive: true });
+            setSpecialities(list);
+        } catch (e) {
+            setSpecialitiesError(e.message);
+        } finally {
+            setSpecialitiesLoading(false);
+        }
+    }
+
+    function closeImportModal() {
+        setImportOpen(false);
+        setIsDragging(false);
+    }
+
+    function onPickExcelFile(e) {
+        const file = e.target.files?.[0];
+        e.target.value = "";
+        if (!file) return;
+
+        if (!isExcelFile(file)) {
+            setImportMsg("Solo se permiten archivos .xls o .xlsx");
+            setExcelFile(null);
+            return;
+        }
+
+        setExcelFile(file);
+        setImportMsg("");
+    }
+
+    function onDragOver(e) {
+        e.preventDefault();
+        setIsDragging(true);
+    }
+
+    function onDragLeave(e) {
+        e.preventDefault();
+        setIsDragging(false);
+    }
+
+    function onDrop(e) {
+        e.preventDefault();
+        setIsDragging(false);
+
+        const file = e.dataTransfer.files?.[0];
+        if (!file) return;
+
+        if (!isExcelFile(file)) {
+            setImportMsg("Solo se permiten archivos .xls o .xlsx");
+            setExcelFile(null);
+            return;
+        }
+
+        setExcelFile(file);
+        setImportMsg("");
+    }
+
+    async function submitImport() {
+        if (!excelFile) return setImportMsg("Debes adjuntar un archivo Excel.");
+        if (!isExcelFile(excelFile)) return setImportMsg("Solo se permiten archivos .xls o .xlsx");
+        if (!idSpeciality) return setImportMsg("Debes seleccionar una especialidad.");
+        if (!importYear || !importMonth) return setImportMsg("Debes seleccionar año y mes.");
+
+        const maxMB = 10;
+        if (excelFile.size > maxMB * 1024 * 1024) return setImportMsg(`El archivo supera ${maxMB}MB`);
+
+        setImportUploading(true);
+        setImportMsg("");
+
+        try {
+            await importDutysExcel({
+                file: excelFile,
+                year: importYear,
+                month: importMonth,
+                idSpeciality: idSpeciality,
+            });
+
+            setImportMsg("Excel importado correctamente");
+            // Si quieres cerrar automático:
+            // setImportOpen(false);
+        } catch (e) {
+            setImportMsg(`Error al subir: ${e.message}`);
+        } finally {
+            setImportUploading(false);
+        }
+    }
+
+    // =========================================================
+
+    return (
         <div className="hdContent">
             {/* Header escritorio */}
             <div className="hdDesktopHeader">
@@ -196,22 +350,30 @@ export default function PanelAdministracion() {
 
                         {filterOpen && (
                             <div className="hdFilterMenu" role="menu">
-                                <button type="button" className={`hdFilterItem ${filterType === "ALL" ? "active" : ""}`}
+                                <button
+                                    type="button"
+                                    className={`hdFilterItem ${filterType === "ALL" ? "active" : ""}`}
                                     onClick={() => { setFilterType("ALL"); setFilterOpen(false); }}
                                 >
                                     Todos
                                 </button>
-                                <button type="button" className={`hdFilterItem ${filterType === "CA" ? "active" : ""}`}
+                                <button
+                                    type="button"
+                                    className={`hdFilterItem ${filterType === "CA" ? "active" : ""}`}
                                     onClick={() => { setFilterType("CA"); setFilterOpen(false); }}
                                 >
                                     Continuidad (CA)
                                 </button>
-                                <button type="button" className={`hdFilterItem ${filterType === "PF" ? "active" : ""}`}
+                                <button
+                                    type="button"
+                                    className={`hdFilterItem ${filterType === "PF" ? "active" : ""}`}
                                     onClick={() => { setFilterType("PF"); setFilterOpen(false); }}
                                 >
                                     Presencia Física (PF)
                                 </button>
-                                <button type="button" className={`hdFilterItem ${filterType === "LOC" ? "active" : ""}`}
+                                <button
+                                    type="button"
+                                    className={`hdFilterItem ${filterType === "LOC" ? "active" : ""}`}
                                     onClick={() => { setFilterType("LOC"); setFilterOpen(false); }}
                                 >
                                     Localizada (LOC)
@@ -220,11 +382,11 @@ export default function PanelAdministracion() {
                         )}
 
                         {/* NUEVA GUARDIA */}
-                        {<button className="hdBtn primary" type="button" onClick={() => openNewGuardiaModal()}>
+                        <button className="hdBtn primary" type="button" onClick={() => openNewGuardiaModal()}>
                             <span className="material-icons-outlined">add</span>
                             <span className="hideOnMobile">Nueva Guardia</span>
                             <span className="showOnMobile">Crear</span>
-                        </button>}
+                        </button>
                     </div>
                 </div>
 
@@ -259,7 +421,6 @@ export default function PanelAdministracion() {
                                 );
                             }}
                             dateClick={(info) => {
-                                // click en día -> abre modal y prellena fecha
                                 openNewGuardiaModal(info.dateStr);
                             }}
                             eventClick={(info) => {
@@ -347,17 +508,127 @@ export default function PanelAdministracion() {
                     </div>
                 </div>
             </section>
+
+            <br />
+
+            {/* SECCIÓN IMPORTAR EXCEL */}
+            <section>
+                <div className="cdActions">
+                    <button className="cdBtnSecondary" type="button" onClick={openImportModal}>
+                        <span className="material-icons excel">table_view</span>
+                        Importar Excel
+                    </button>
+                </div>
+            </section>
+
+            {/* MODAL IMPORTAR EXCEL */}
+            {importOpen && (
+                <div className="hdModalOverlay" role="dialog" aria-modal="true">
+                    <div className="hdModalCard">
+                        <div className="hdModalHead">
+                            <div className="hdModalTitle">Importar guardias desde Excel</div>
+                            <button className="hdModalClose" type="button" onClick={closeImportModal} aria-label="Cerrar">
+                                <span className="material-icons-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <div className="hdModalBody">
+                            <label className="hdField">
+                                <span>Especialidad</span>
+
+                                {specialitiesLoading ? (
+                                    <div className="hdControl">Cargando especialidades...</div>
+                                ) : specialitiesError ? (
+                                    <div className="hdControl">{specialitiesError}</div>
+                                ) : (
+                                    <select
+                                        className="hdControl"
+                                        value={idSpeciality}
+                                        onChange={(e) => setIdSpeciality(e.target.value)}
+                                    >
+                                        <option value="">-- Selecciona una especialidad --</option>
+                                        {specialities.map((s) => (
+                                            <option key={s.id} value={s.id}>
+                                                {s.name} (id: {s.id})
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
+                            </label>
+
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                                <label className="hdField">
+                                    <span>Mes</span>
+                                    <select className="hdControl" value={importMonth} onChange={(e) => setImportMonth(e.target.value)}>
+                                        {months.map((m) => (
+                                            <option key={m.value} value={m.value}>
+                                                {m.label} ({m.value})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+
+                                <label className="hdField">
+                                    <span>Año</span>
+                                    <select className="hdControl" value={importYear} onChange={(e) => setImportYear(e.target.value)}>
+                                        {years.map((y) => (
+                                            <option key={y} value={y}>
+                                                {y}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+                            </div>
+
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                style={{ display: "none" }}
+                                onChange={onPickExcelFile}
+                            />
+
+                            <div
+                                onDragOver={onDragOver}
+                                onDragLeave={onDragLeave}
+                                onDrop={onDrop}
+                                onClick={() => fileInputRef.current?.click()}
+                                style={{
+                                    marginTop: 12,
+                                    border: `2px dashed ${isDragging ? "#888" : "#ccc"}`,
+                                    borderRadius: 12,
+                                    padding: 16,
+                                    cursor: "pointer",
+                                    textAlign: "center",
+                                    userSelect: "none",
+                                }}
+                                title="Arrastra Excel o haz clic para seleccionarlo"
+                            >
+                                <div style={{ fontWeight: 600 }}>Arrastra aquí tu Excel (.xls / .xlsx)</div>
+                                <div style={{ marginTop: 6, opacity: 0.8 }}>o haz clic para seleccionarlo</div>
+
+                                {excelFile && (
+                                    <div style={{ marginTop: 10 }}>
+                                        Archivo: <b>{excelFile.name}</b>
+                                    </div>
+                                )}
+                            </div>
+
+                            {importMsg && <p style={{ marginTop: 12 }}>{importMsg}</p>}
+                        </div>
+
+                        <div className="hdModalFooter">
+                            <button className="hdBtn light" type="button" onClick={closeImportModal}>
+                                Cancelar
+                            </button>
+
+                            <button className="hdBtn primary" type="button" disabled={importUploading} onClick={submitImport}>
+                                {importUploading ? "Subiendo..." : "Importar"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-
-
-
-
-
-
-
     );
-
-
-
-
 }

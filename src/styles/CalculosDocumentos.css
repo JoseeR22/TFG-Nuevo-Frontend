@@ -372,15 +372,6 @@ body {
     margin-bottom: 4px;
 }
 
-.cdMoney {
-    font-weight: 900;
-    font-size: 18px;
-}
-
-.cdMoney.primary {
-    color: var(--primary);
-}
-
 .cdTotals .right {
     text-align: right;
 }

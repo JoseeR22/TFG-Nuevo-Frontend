@@ -6,17 +6,16 @@ export default function CalculosDocumentos() {
     const [mes, setMes] = useState("Abril 2024");
 
     // Mock: totales (luego lo calculas con tus datos reales)
-    const resumen = useMemo(
-        () => ({
-            horasTotales: 106,
-            ca: "20h",
-            pf: "22h",
-            loc: "9h",
-            totalEstimado: "1.250,00 €",
-            bonusJefatura: "50,00 €",
-        }),
-        []
-    );
+const resumen = useMemo(
+  () => ({
+    horasTotales: 106,
+    ca: "20h",
+    pf: "22h",
+    loc: "9h",
+  }),
+  []
+);
+
 
     const daysHeader = ["L", "M", "X", "J", "V", "S", "D"];
 
@@ -204,17 +203,6 @@ export default function CalculosDocumentos() {
                                 <span>LOC (Localizada)</span>
                             </div>
                             <div className="cdRowRight">{resumen.loc}</div>
-                        </div>
-                    </div>
-
-                    <div className="cdTotals">
-                        <div>
-                            <div className="cdTiny">Total Estimado</div>
-                            <div className="cdMoney">{resumen.totalEstimado}</div>
-                        </div>
-                        <div className="right">
-                            <div className="cdTiny">Bonus Jefatura</div>
-                            <div className="cdMoney primary">{resumen.bonusJefatura}</div>
                         </div>
                     </div>
                 </section>

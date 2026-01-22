@@ -1,5 +1,6 @@
 import "../styles/PanelAdministracion.css";
 import { useMemo, useRef, useState, useEffect } from "react";
+import { getSpecialities, importDutysExcel, isExcelFile } from "../services/importExcelService";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -72,7 +73,7 @@ export default function PanelAdministracion() {
         return events.filter((e) => e.extendedProps?.type === filterType);
     }, [events, filterType]);
 
-    // MODAL NUEVA GUARDIA 
+    // MODAL NUEVA GUARDIA
     const [newOpen, setNewOpen] = useState(false);
     const [newType, setNewType] = useState("CA");          // CA | PF | LOC
     const [newDate, setNewDate] = useState("2024-04-01");  // YYYY-MM-DD
@@ -109,11 +110,9 @@ export default function PanelAdministracion() {
         }
     }, [newType]);
 
-    //Modal para enviar excel
-
-    // Endpoints
-    const SPECIALITIES_URL = "https://daw11.arenadaw.com.es/api/speciality";
-    const UPLOAD_URL = "https://daw11.arenadaw.com.es/api/importDutys";
+    // =========================================================
+    // ✅ IMPORTAR EXCEL (REFACTORIZADO A SERVICES)
+    // =========================================================
 
     // Estado modal
     const [importOpen, setImportOpen] = useState(false);
@@ -155,7 +154,6 @@ export default function PanelAdministracion() {
     const years = useMemo(() => {
         const start = 2020;
         const end = 2030;
-        // para que no se envien años raretes
         const arr = [];
         for (let y = start; y <= end; y++) arr.push(String(y));
         return arr;
@@ -167,21 +165,6 @@ export default function PanelAdministracion() {
         const year = String(d.getFullYear());
         const month = String(d.getMonth() + 1).padStart(2, "0");
         return { year, month };
-    }
-
-    function isExcelFile(file) {
-        const name = (file?.name || "").toLowerCase();
-        const hasExt = name.endsWith(".xls") || name.endsWith(".xlsx");
-
-        // A veces file.type viene vacío dependiendo del navegador/sistema,
-        // por eso permitimos ext O mime.
-        const allowedMimes = [
-            "application/vnd.ms-excel",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        ];
-        const hasMime = allowedMimes.includes(file?.type);
-
-        return hasExt || hasMime;
     }
 
     async function openImportModal() {
@@ -196,16 +179,11 @@ export default function PanelAdministracion() {
         setIdSpeciality("");
         setImportOpen(true);
 
-        // Cargar especialidades
+        // Cargar especialidades desde SERVICE
         setSpecialitiesLoading(true);
         setSpecialitiesError("");
         try {
-            const res = await fetch(SPECIALITIES_URL);
-            const data = await res.json();
-            if (!res.ok) throw new Error(data?.mistake || data?.error || `HTTP ${res.status}`);
-
-            // Opcional: si tiene "active", filtramos activas
-            const list = Array.isArray(data) ? data.filter(s => s.active !== false) : [];
+            const list = await getSpecialities({ onlyActive: true });
             setSpecialities(list);
         } catch (e) {
             setSpecialitiesError(e.message);
@@ -261,56 +239,25 @@ export default function PanelAdministracion() {
         setImportMsg("");
     }
 
-    //validaciones al subir el excel
     async function submitImport() {
-        if (!excelFile) {
-            setImportMsg("Debes adjuntar un archivo Excel.");
-            return;
-        }
-        if (!idSpeciality) {
-            setImportMsg("Debes seleccionar una especialidad.");
-            return;
-        }
-        if (!importYear || !importMonth) {
-            setImportMsg("Debes seleccionar año y mes.");
-            return;
-        }
+        if (!excelFile) return setImportMsg("Debes adjuntar un archivo Excel.");
+        if (!isExcelFile(excelFile)) return setImportMsg("Solo se permiten archivos .xls o .xlsx");
+        if (!idSpeciality) return setImportMsg("Debes seleccionar una especialidad.");
+        if (!importYear || !importMonth) return setImportMsg("Debes seleccionar año y mes.");
 
         const maxMB = 10;
-        if (excelFile.size > maxMB * 1024 * 1024) {
-            setImportMsg(`El archivo supera ${maxMB}MB`);
-            return;
-        }
+        if (excelFile.size > maxMB * 1024 * 1024) return setImportMsg(`El archivo supera ${maxMB}MB`);
 
         setImportUploading(true);
         setImportMsg("");
 
         try {
-            const formData = new FormData();
-            formData.append("file", excelFile);
-            formData.append("year", String(importYear));
-            formData.append("month", String(importMonth).padStart(2, "0"));
-            formData.append("idSpeciality", String(idSpeciality));
-
-            const res = await fetch(UPLOAD_URL, {
-                method: "POST",
-                body: formData,
-                // credentials: "include", // si usáis cookies/sesión (Sanctum SPA)
+            await importDutysExcel({
+                file: excelFile,
+                year: importYear,
+                month: importMonth,
+                idSpeciality: idSpeciality,
             });
-
-            // Leer respuesta 1 sola vez
-            const contentType = res.headers.get("content-type") || "";
-            const payload = contentType.includes("application/json")
-                ? await res.json()
-                : await res.text();
-
-            if (!res.ok) {
-                const msg =
-                    typeof payload === "string"
-                        ? payload
-                        : (payload?.mistake || payload?.error || payload?.message || `HTTP ${res.status}`);
-                throw new Error(msg);
-            }
 
             setImportMsg("Excel importado correctamente");
             // Si quieres cerrar automático:
@@ -564,14 +511,10 @@ export default function PanelAdministracion() {
 
             <br />
 
-            {/* SECCIÓN IMPORTAR EXCEL*/}
+            {/* SECCIÓN IMPORTAR EXCEL */}
             <section>
                 <div className="cdActions">
-                    <button
-                        className="cdBtnSecondary"
-                        type="button"
-                        onClick={openImportModal}
-                    >
+                    <button className="cdBtnSecondary" type="button" onClick={openImportModal}>
                         <span className="material-icons excel">table_view</span>
                         Importar Excel
                     </button>
@@ -584,18 +527,12 @@ export default function PanelAdministracion() {
                     <div className="hdModalCard">
                         <div className="hdModalHead">
                             <div className="hdModalTitle">Importar guardias desde Excel</div>
-                            <button
-                                className="hdModalClose"
-                                type="button"
-                                onClick={closeImportModal}
-                                aria-label="Cerrar"
-                            >
+                            <button className="hdModalClose" type="button" onClick={closeImportModal} aria-label="Cerrar">
                                 <span className="material-icons-outlined">close</span>
                             </button>
                         </div>
 
                         <div className="hdModalBody">
-                            {/* Especialidad */}
                             <label className="hdField">
                                 <span>Especialidad</span>
 
@@ -619,15 +556,10 @@ export default function PanelAdministracion() {
                                 )}
                             </label>
 
-                            {/* Mes / Año con SELECT */}
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                                 <label className="hdField">
                                     <span>Mes</span>
-                                    <select
-                                        className="hdControl"
-                                        value={importMonth}
-                                        onChange={(e) => setImportMonth(e.target.value)}
-                                    >
+                                    <select className="hdControl" value={importMonth} onChange={(e) => setImportMonth(e.target.value)}>
                                         {months.map((m) => (
                                             <option key={m.value} value={m.value}>
                                                 {m.label} ({m.value})
@@ -638,11 +570,7 @@ export default function PanelAdministracion() {
 
                                 <label className="hdField">
                                     <span>Año</span>
-                                    <select
-                                        className="hdControl"
-                                        value={importYear}
-                                        onChange={(e) => setImportYear(e.target.value)}
-                                    >
+                                    <select className="hdControl" value={importYear} onChange={(e) => setImportYear(e.target.value)}>
                                         {years.map((y) => (
                                             <option key={y} value={y}>
                                                 {y}
@@ -652,7 +580,6 @@ export default function PanelAdministracion() {
                                 </label>
                             </div>
 
-                            {/* Input oculto */}
                             <input
                                 ref={fileInputRef}
                                 type="file"
@@ -661,7 +588,6 @@ export default function PanelAdministracion() {
                                 onChange={onPickExcelFile}
                             />
 
-                            {/* Dropzone */}
                             <div
                                 onDragOver={onDragOver}
                                 onDragLeave={onDragLeave}
@@ -678,12 +604,8 @@ export default function PanelAdministracion() {
                                 }}
                                 title="Arrastra Excel o haz clic para seleccionarlo"
                             >
-                                <div style={{ fontWeight: 600 }}>
-                                    Arrastra aquí tu Excel (.xls / .xlsx)
-                                </div>
-                                <div style={{ marginTop: 6, opacity: 0.8 }}>
-                                    o haz clic para seleccionarlo
-                                </div>
+                                <div style={{ fontWeight: 600 }}>Arrastra aquí tu Excel (.xls / .xlsx)</div>
+                                <div style={{ marginTop: 6, opacity: 0.8 }}>o haz clic para seleccionarlo</div>
 
                                 {excelFile && (
                                     <div style={{ marginTop: 10 }}>
@@ -700,12 +622,7 @@ export default function PanelAdministracion() {
                                 Cancelar
                             </button>
 
-                            <button
-                                className="hdBtn primary"
-                                type="button"
-                                disabled={importUploading}
-                                onClick={submitImport}
-                            >
+                            <button className="hdBtn primary" type="button" disabled={importUploading} onClick={submitImport}>
                                 {importUploading ? "Subiendo..." : "Importar"}
                             </button>
                         </div>

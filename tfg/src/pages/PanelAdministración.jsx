@@ -63,7 +63,7 @@ export default function PanelAdministracion() {
     // ===== Estado editable de eventos (aquí añadimos nuevas guardias) =====
     const [events, setEvents] = useState(baseEvents);
 
-    // ===== FILTROS =====
+    //  FILTROS 
     const [filterOpen, setFilterOpen] = useState(false);
     const [filterType, setFilterType] = useState("ALL"); // ALL | CA | PF | LOC
 

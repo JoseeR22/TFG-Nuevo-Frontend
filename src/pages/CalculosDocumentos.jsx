@@ -7,15 +7,15 @@ export default function CalculosDocumentos() {
     const [mes, setMes] = useState("Abril 2024");
 
     // Mock: totales (luego lo calculas con tus datos reales)
-    const resumen = useMemo(
-        () => ({
-            horasTotales: 106,
-            ca: "20h",
-            pf: "22h",
-            loc: "9h",
-        }),
-        []
-    );
+const resumen = useMemo(
+  () => ({
+    horasTotales: 51,
+    ca: "20h",
+    pf: "22h",
+    loc: "9h",
+  }),
+  []
+);
 
 
     const daysHeader = ["L", "M", "X", "J", "V", "S", "D"];

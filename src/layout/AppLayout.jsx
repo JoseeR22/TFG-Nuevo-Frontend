@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import "../styles/AppLayout.css";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
@@ -110,7 +111,10 @@ export default function AppLayout() {
         <main className="appMain" onClick={() => open && closeMenu()}>
           <Outlet />
         </main>
-      </div>
+
+      </div>     
+         
     </div>
+    
   );
 }

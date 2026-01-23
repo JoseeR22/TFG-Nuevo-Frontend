@@ -1,12 +1,24 @@
-export default function footer() {
+import "./style/Footer.css";
 
+export default function Footer({
+    year = new Date().getFullYear(),
+    org = "Empresa colaboradora con la Junta de Andalucía",
+    links = [
+        { label: "Aviso Legal", href: "#" },
+        { label: "Privacidad", href: "#" },
+    ],
+}) {
     return (
         <footer className="loginFooter">
-            <p>© 2025 Empresa en colaboracion con la Junta de Andalucía. Todos los derechos reservados.</p>
+            <p>© {year} {org}. Todos los derechos reservados.</p>
+
             <div className="footerLinks">
-                <a href="#">Aviso Legal</a>
-                <a href="#">Privacidad</a>
+                {links.map((l) => (
+                    <a key={l.label} href={l.href}>
+                        {l.label}
+                    </a>
+                ))}
             </div>
         </footer>
-    )
+    );
 }

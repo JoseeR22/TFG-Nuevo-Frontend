@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import "../styles/GestionGuardias.css";
+// import Header from "../components/Header";
 
 export default function GestionGuardias() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -63,42 +64,7 @@ export default function GestionGuardias() {
   return (
     <div className="ggPage">
       {/* HEADER */}
-      <header className="ggHeader">
-        <div className="ggTopbar">
-          <div className="ggBrand">
-
-
-            <div className="ggBrandText">
-              <div className="cdOverline">Junta de Andalucía</div>
-              <div className="cdTitle">Gestión de Guardias</div>
-            </div>
-          </div>
-
-          <div className="ggTopbarRight">
-            <button className="iconBtn" aria-label="Notificaciones">
-              <span className="material-icons">notifications</span>
-            </button>
-            <div className="ggAvatar" aria-label="Usuario JP">
-              JP
-            </div>
-          </div>
-        </div>
-
-        <div className="ggDatebar">
-          <button className="pillBtn" aria-label="Día anterior">
-            <span className="material-icons">chevron_left</span>
-          </button>
-
-          <div className="ggDateLabel">
-            <span className="material-icons">calendar_today</span>
-            <span>{dateLabel}</span>
-          </div>
-
-          <button className="pillBtn" aria-label="Día siguiente">
-            <span className="material-icons">chevron_right</span>
-          </button>
-        </div>
-      </header>
+      {/* <Header /> */}
 
       {/* MAIN */}
       <main className="ggMain">

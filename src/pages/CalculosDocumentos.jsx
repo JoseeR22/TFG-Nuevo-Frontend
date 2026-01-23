@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import "../styles/CalculosDocumentos.css";
-import Header from "../components/Header";
+// import Header from "../components/Header";
 import "../styles/AppLayout.css";
 
 export default function CalculosDocumentos() {
@@ -72,7 +72,7 @@ export default function CalculosDocumentos() {
 
     return (
         <div className="cdPage">
-           <Header />
+           {/* <Header /> */}
 
             <main className="cdMain">
                 {/* Selectores */}

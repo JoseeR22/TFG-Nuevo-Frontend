@@ -10,11 +10,19 @@ export default function Login() {
 
     function onSubmit(e) {
         e.preventDefault();
-        localStorage.setItem("auth", "1");
+
+        // ✅ Guardamos un objeto JSON (lo que AppLayout/Header esperan)
+        const authPayload = {
+            name: username.trim() || "Usuario",
+            email: `${(username.trim() || "usuario").toLowerCase()}@demo.com`,
+            avatarUrl: "", // si algún día tienes URL real, la pones aquí
+            // token: "demo-token" // opcional, por si luego lo usas
+        };
+
+        localStorage.setItem("auth", JSON.stringify(authPayload));
+
         navigate("/home");
     }
-
-    
 
     return (
         <main className="loginPage">
@@ -87,7 +95,7 @@ export default function Login() {
                 </section>
 
                 <footer className="loginFooter">
-                    <p>© 2025 Junta de Andalucía. Todos los derechos reservados.</p>
+                    <p>© 2026 Junta de Andalucía. Todos los derechos reservados.</p>
                     <div className="footerLinks">
                         <a href="#">Aviso Legal</a>
                         <a href="#">Privacidad</a>

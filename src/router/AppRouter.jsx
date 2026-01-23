@@ -5,7 +5,7 @@ import Login from "../pages/Login";
 import HomeDashboard from "../pages/HomeDashboard";
 import Guardias from "../pages/GestionGuardias";
 import Calculos from "../pages/CalculosDocumentos";
-import PanelAdmin from "../pages/PanelAdministracion";
+// import PanelAdmin from "../pages/PanelAdministracion";
 
 export default function AppRouter() {
     return (
@@ -18,7 +18,7 @@ export default function AppRouter() {
                 <Route path="/home" element={<HomeDashboard />} />
                 <Route path="/guardias" element={<Guardias />} />
                 <Route path="/calculos" element={<Calculos />} />
-                <Route path="/panelAdmin" element={<PanelAdmin />} />
+                {/* <Route path="/panelAdmin" element={<PanelAdmin />} /> */}
             </Route>
 
             {/* Default */}

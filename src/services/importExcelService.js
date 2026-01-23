@@ -1,4 +1,4 @@
-    import { getJson, postForm } from "./apiClient";
+import { getJson, postForm } from "./apiClient";
 
 const SPECIALITIES_URL = "https://daw11.arenadaw.com.es/api/speciality";
 const IMPORT_DUTYS_URL = "https://daw11.arenadaw.com.es/api/importDuties";

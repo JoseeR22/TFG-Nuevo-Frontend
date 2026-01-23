@@ -1015,7 +1015,15 @@ body {
     color: #0b5a35;
 }
 
+
 /* ===== Modal Nueva Guardia ===== */
+
+.cdActions{
+    margin-top: 2vh;
+}
+
+
+
 .hdModalOverlay {
     position: fixed;
     inset: 0;
@@ -1024,6 +1032,7 @@ body {
     place-items: center;
     z-index: 80;
     padding: 16px;
+    margin-top: 5%;
 }
 
 .hdModalCard {

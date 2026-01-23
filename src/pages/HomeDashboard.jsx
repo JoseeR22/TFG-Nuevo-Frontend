@@ -499,6 +499,124 @@ export default function HomeDashboard() {
           </div>
         </div>
       </section>
+      {/* SECCIÓN IMPORTAR EXCEL */}
+      <section>
+        <div className="cdActions">
+          <button className="cdBtnSecondary" type="button" onClick={openImportModal}>
+            <span className="material-icons excel">table_view</span>
+            Importar Excel
+          </button>
+        </div>
+      </section>
+
+      {/* MODAL IMPORTAR EXCEL */}
+      {importOpen && (
+        <div className="hdModalOverlay" role="dialog" aria-modal="true">
+          <div className="hdModalCard">
+            <div className="hdModalHead">
+              <div className="hdModalTitle">Importar guardias desde Excel</div>
+              <button className="hdModalClose" type="button" onClick={closeImportModal} aria-label="Cerrar">
+                <span className="material-icons-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="hdModalBody">
+              <label className="hdField">
+                <span>Especialidad</span>
+
+                {specialitiesLoading ? (
+                  <div className="hdControl">Cargando especialidades...</div>
+                ) : specialitiesError ? (
+                  <div className="hdControl">{specialitiesError}</div>
+                ) : (
+                  <select
+                    className="hdControl"
+                    value={idSpeciality}
+                    onChange={(e) => setIdSpeciality(e.target.value)}
+                  >
+                    <option value="">-- Selecciona una especialidad --</option>
+                    {specialities.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} (id: {s.id})
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </label>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <label className="hdField">
+                  <span>Mes</span>
+                  <select className="hdControl" value={importMonth} onChange={(e) => setImportMonth(e.target.value)}>
+                    {months.map((m) => (
+                      <option key={m.value} value={m.value}>
+                        {m.label} ({m.value})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="hdField">
+                  <span>Año</span>
+                  <select className="hdControl" value={importYear} onChange={(e) => setImportYear(e.target.value)}>
+                    {years.map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                style={{ display: "none" }}
+                onChange={onPickExcelFile}
+              />
+
+              <div
+                onDragOver={onDragOver}
+                onDragLeave={onDragLeave}
+                onDrop={onDrop}
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  marginTop: 12,
+                  border: `2px dashed ${isDragging ? "#888" : "#ccc"}`,
+                  borderRadius: 12,
+                  padding: 16,
+                  cursor: "pointer",
+                  textAlign: "center",
+                  userSelect: "none",
+                }}
+                title="Arrastra Excel o haz clic para seleccionarlo"
+              >
+                <div style={{ fontWeight: 600 }}>Arrastra aquí tu Excel (.xls / .xlsx)</div>
+                <div style={{ marginTop: 6, opacity: 0.8 }}>o haz clic para seleccionarlo</div>
+
+                {excelFile && (
+                  <div style={{ marginTop: 10 }}>
+                    Archivo: <b>{excelFile.name}</b>
+                  </div>
+                )}
+              </div>
+
+              {importMsg && <p style={{ marginTop: 12 }}>{importMsg}</p>}
+            </div>
+
+            <div className="hdModalFooter">
+              <button className="hdBtn light" type="button" onClick={closeImportModal}>
+                Cancelar
+              </button>
+
+              <button className="hdBtn primary" type="button" disabled={importUploading} onClick={submitImport}>
+                {importUploading ? "Subiendo..." : "Importar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

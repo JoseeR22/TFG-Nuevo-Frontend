@@ -18,7 +18,7 @@ export default function Header(){
                 </div>
 
                 <button className="appIconBtn" aria-label="Notificaciones">
-                    <span className="material-icons-outlined">notifications</span>
+                    <span className="material-icons-outlined">notificaciones</span>
                 </button>
             </header>
     )

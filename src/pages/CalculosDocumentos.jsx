@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import "../styles/CalculosDocumentos.css";
+import Header from "../components/Header";
+import "../styles/AppLayout.css";
 
 export default function CalculosDocumentos() {
     const [profesional, setProfesional] = useState("Juan Gómez");
@@ -69,18 +71,7 @@ const resumen = useMemo(
 
     return (
         <div className="cdPage">
-            <header className="cdHeader">
-                <div className="cdHeaderInner">
-                    <div className="cdHeaderText">
-                        <div className="cdOverline">Junta de Andalucía</div>
-                        <div className="cdTitle">Cálculos y Documentos</div>
-                    </div>
-
-                    <button className="cdMenuBtn" type="button" aria-label="Menú">
-                        <span className="material-icons">menu</span>
-                    </button>
-                </div>
-            </header>
+           <Header />
 
             <main className="cdMain">
                 {/* Selectores */}

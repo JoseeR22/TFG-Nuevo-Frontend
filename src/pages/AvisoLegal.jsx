@@ -20,9 +20,9 @@ export default function Legal() {
                     </p>
                     <ul>
                         <li><b>Titular:</b> GuardiApp</li>
-                        <li><b>Domicilio:</b> (Completar)</li>
+                        <li><b>Domicilio:</b> C. Escritora Maria Goyri, 14005</li>
                         <li><b>Correo:</b> (Completar)</li>
-                        <li><b>CIF/NIF:</b> (Completar)</li>
+                        <li><b>NIF:</b> A12345678</li>
                     </ul>
                 </section>
 
@@ -82,8 +82,7 @@ export default function Legal() {
 
                 <section className="legalCard legalNote">
                     <p>
-                        Nota: Este texto es genérico. Sustituye los campos “(Completar)” y
-                        adapta el contenido a tu organización y requisitos legales.
+                        Nota: Este texto es una simulación para nuestro proyecto, no pretende ser fiel a la realidad ni aparentar que ha sido completamente escrito a mano. Agradecemos su atención y comprensión.
                     </p>
                 </section>
             </main>

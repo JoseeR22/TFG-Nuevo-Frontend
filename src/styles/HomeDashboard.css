@@ -798,7 +798,7 @@ body {
 
 /* Chips tipo CA/PF/LOC */
 .hdFcChip {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
     border-radius: 8px;
@@ -809,6 +809,7 @@ body {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 /* Colores aproximados a tu diseño */
@@ -831,8 +832,11 @@ body {
 }
 
 .hdFcChipText {
-    flex: 1;
     min-width: 0;
+    /* CLAVE para que elipsis funcione en flex */
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 /* Icono de jefe dentro del chip */
@@ -1011,7 +1015,15 @@ body {
     color: #0b5a35;
 }
 
+
 /* ===== Modal Nueva Guardia ===== */
+
+.cdActions{
+    margin-top: 2vh;
+}
+
+
+
 .hdModalOverlay {
     position: fixed;
     inset: 0;
@@ -1020,6 +1032,7 @@ body {
     place-items: center;
     z-index: 80;
     padding: 16px;
+    margin-top: 5%;
 }
 
 .hdModalCard {

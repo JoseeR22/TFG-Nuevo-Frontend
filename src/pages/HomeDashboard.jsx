@@ -3,7 +3,6 @@ import "../styles/HomeDashboard.css";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import Header from "../components/Header";
 
 export default function HomeDashboard() {
   const stats = useMemo(
@@ -45,18 +44,18 @@ export default function HomeDashboard() {
   const baseEvents = useMemo(
     () => [
       // CA (Continuidad)
-      { id: "1", title: "CA 15:00", start: "2024-04-01T15:00:00", extendedProps: { type: "CA" } },
-      { id: "2", title: "CA 15:00", start: "2024-04-04T15:00:00", extendedProps: { type: "CA" } },
-      { id: "3", title: "CA 19:00", start: "2024-04-04T19:00:00", extendedProps: { type: "CA" } },
-      { id: "4", title: "CA 12:00", start: "2024-04-08T12:00:00", extendedProps: { type: "CA" } },
+      { id: "1", title: "CA 15:00 - Antonio Ramon", start: "2024-04-01T15:00:00", extendedProps: { type: "CA" } },
+      { id: "2", title: "CA 15:00 - Raul Henares", start: "2024-04-04T15:00:00", extendedProps: { type: "CA" }, },
+      { id: "3", title: "CA 19:00 - Kike Paez", start: "2024-04-04T19:00:00", extendedProps: { type: "CA" } },
+      { id: "4", title: "CA 12:00 - Samuel Peña", start: "2024-04-08T12:00:00", extendedProps: { type: "CA" } },
 
       // PF (Presencia Física)
-      { id: "5", title: "PF 24h", start: "2024-04-02", allDay: true, extendedProps: { type: "PF" } },
-      { id: "6", title: "PF 10h", start: "2024-04-05", allDay: true, extendedProps: { type: "PF" } },
-      { id: "7", title: "PF 24h", start: "2024-04-10", allDay: true, extendedProps: { type: "PF" } },
+      { id: "5", title: "PF 24h - Javier Juarez", start: "2024-04-02", allDay: true, extendedProps: { type: "PF" } },
+      { id: "6", title: "PF 10h - Jose Ramon", start: "2024-04-05", allDay: true, extendedProps: { type: "PF" } },
+      { id: "7", title: "PF 24h - Javier Ruiz", start: "2024-04-10", allDay: true, extendedProps: { type: "PF" } },
 
       // LOC (Localizada)
-      { id: "8", title: "LOC 8:00", start: "2024-04-03T08:00:00", extendedProps: { type: "LOC", jefe: true } },
+      { id: "8", title: "LOC 8:00 - Antonio Moyano", start: "2024-04-03T08:00:00", extendedProps: { type: "LOC", jefe: true } },
     ],
     []
   );
@@ -78,20 +77,23 @@ export default function HomeDashboard() {
   const [newType, setNewType] = useState("CA");          // CA | PF | LOC
   const [newDate, setNewDate] = useState("2024-04-01");  // YYYY-MM-DD
   const [newTime, setNewTime] = useState("15:00");       // HH:mm
-  const [newAllDay, setNewAllDay] = useState(false);     // para PF 24h / etc
+  const [newName, setNewName] = useState("");
 
   function openNewGuardiaModal(prefilledDate) {
     // Si haces click en día, lo prellenamos
     if (prefilledDate) setNewDate(prefilledDate);
+    setNewName(""); // reset
     setNewOpen(true);
   }
 
   function addGuardia() {
-    // Construir start: si allDay => "YYYY-MM-DD" / si no => "YYYY-MM-DDTHH:mm:00"
-    const start = newAllDay ? newDate : `${newDate}T${newTime}:00`;
+    //  Siempre con hora (sin allDay)
+    const start = `${newDate}T${newTime}:00`;
 
-    // Título estilo chip
-    const title = newAllDay ? `${newType} 24h` : `${newType} ${newTime}`;
+    // Título con nombre si existe
+    const baseTitle = `${newType} ${newTime}`;
+    const nameClean = newName.trim();
+    const title = nameClean ? `${baseTitle} - ${nameClean}` : baseTitle;
 
     const id = crypto?.randomUUID ? crypto.randomUUID() : String(Date.now());
 
@@ -101,26 +103,171 @@ export default function HomeDashboard() {
         id,
         title,
         start,
-        allDay: newAllDay,
-        extendedProps: { type: newType },
+        allDay: false,
+        extendedProps: { type: newType, name: nameClean },
       },
     ]);
 
     setNewOpen(false);
   }
 
-  // Si eliges PF y marcas allDay, tiene sentido por defecto
-  useEffect(() => {
-    if (newType === "PF") {
-      // no forzamos, pero podrías activar esto si quieres:
-      // setNewAllDay(true);
+  // Estado modal
+  const [importOpen, setImportOpen] = useState(false);
+
+  // Especialidades (para el select)
+  const [specialities, setSpecialities] = useState([]);
+  const [specialitiesLoading, setSpecialitiesLoading] = useState(false);
+  const [specialitiesError, setSpecialitiesError] = useState("");
+
+  // Campos requeridos por el backend
+  const [idSpeciality, setIdSpeciality] = useState("");
+  const [importMonth, setImportMonth] = useState("01");
+  const [importYear, setImportYear] = useState("2026");
+
+  // Archivo Excel
+  const [excelFile, setExcelFile] = useState(null);
+  const fileInputRef = useRef(null);
+
+  // UX
+  const [isDragging, setIsDragging] = useState(false);
+  const [importUploading, setImportUploading] = useState(false);
+  const [importMsg, setImportMsg] = useState("");
+
+  const months = useMemo(() => ([
+    { value: "01", label: "Enero" },
+    { value: "02", label: "Febrero" },
+    { value: "03", label: "Marzo" },
+    { value: "04", label: "Abril" },
+    { value: "05", label: "Mayo" },
+    { value: "06", label: "Junio" },
+    { value: "07", label: "Julio" },
+    { value: "08", label: "Agosto" },
+    { value: "09", label: "Septiembre" },
+    { value: "10", label: "Octubre" },
+    { value: "11", label: "Noviembre" },
+    { value: "12", label: "Diciembre" },
+  ]), []);
+
+  const years = useMemo(() => {
+    const start = 2020;
+    const end = 2030;
+    const arr = [];
+    for (let y = start; y <= end; y++) arr.push(String(y));
+    return arr;
+  }, []);
+
+  function getMonthYearFromCalendar() {
+    const api = calendarRef.current?.getApi();
+    const d = api?.getDate() ?? new Date();
+    const year = String(d.getFullYear());
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    return { year, month };
+  }
+
+  async function openImportModal() {
+    // Prefill mes/año del calendario
+    const { year, month } = getMonthYearFromCalendar();
+    setImportYear(years.includes(year) ? year : years[years.length - 1]);
+    setImportMonth(month);
+
+    // Reset UI modal
+    setImportMsg("");
+    setExcelFile(null);
+    setIdSpeciality("");
+    setImportOpen(true);
+
+    // Cargar especialidades desde SERVICE
+    setSpecialitiesLoading(true);
+    setSpecialitiesError("");
+    try {
+      const list = await getSpecialities({ onlyActive: true });
+      setSpecialities(list);
+    } catch (e) {
+      setSpecialitiesError(e.message);
+    } finally {
+      setSpecialitiesLoading(false);
     }
-  }, [newType]);
+  }
+
+  function closeImportModal() {
+    setImportOpen(false);
+    setIsDragging(false);
+  }
+
+  function onPickExcelFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (!isExcelFile(file)) {
+      setImportMsg("Solo se permiten archivos .xls o .xlsx");
+      setExcelFile(null);
+      return;
+    }
+
+    setExcelFile(file);
+    setImportMsg("");
+  }
+
+  function onDragOver(e) {
+    e.preventDefault();
+    setIsDragging(true);
+  }
+
+  function onDragLeave(e) {
+    e.preventDefault();
+    setIsDragging(false);
+  }
+
+  function onDrop(e) {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    if (!isExcelFile(file)) {
+      setImportMsg("Solo se permiten archivos .xls o .xlsx");
+      setExcelFile(null);
+      return;
+    }
+
+    setExcelFile(file);
+    setImportMsg("");
+  }
+
+  async function submitImport() {
+    if (!excelFile) return setImportMsg("Debes adjuntar un archivo Excel.");
+    if (!isExcelFile(excelFile)) return setImportMsg("Solo se permiten archivos .xls o .xlsx");
+    if (!idSpeciality) return setImportMsg("Debes seleccionar una especialidad.");
+    if (!importYear || !importMonth) return setImportMsg("Debes seleccionar año y mes.");
+
+    const maxMB = 10;
+    if (excelFile.size > maxMB * 1024 * 1024) return setImportMsg(`El archivo supera ${maxMB}MB`);
+
+    setImportUploading(true);
+    setImportMsg("");
+
+    try {
+      await importDutysExcel({
+        file: excelFile,
+        year: importYear,
+        month: importMonth,
+        idSpeciality: idSpeciality,
+      });
+
+      setImportMsg("Excel importado correctamente");
+      // Si quieres cerrar automático:
+      // setImportOpen(false);
+    } catch (e) {
+      setImportMsg(`Error al subir: ${e.message}`);
+    } finally {
+      setImportUploading(false);
+    }
+  }
 
   return (
     <div className="hdContent">
-      {/* Header escritorio */}
-     <Header />
 
       {/* Header móvil dentro del contenido */}
       <div className="hdMobileHeader">
@@ -182,22 +329,30 @@ export default function HomeDashboard() {
 
             {filterOpen && (
               <div className="hdFilterMenu" role="menu">
-                <button type="button" className={`hdFilterItem ${filterType === "ALL" ? "active" : ""}`}
+                <button
+                  type="button"
+                  className={`hdFilterItem ${filterType === "ALL" ? "active" : ""}`}
                   onClick={() => { setFilterType("ALL"); setFilterOpen(false); }}
                 >
                   Todos
                 </button>
-                <button type="button" className={`hdFilterItem ${filterType === "CA" ? "active" : ""}`}
+                <button
+                  type="button"
+                  className={`hdFilterItem ${filterType === "CA" ? "active" : ""}`}
                   onClick={() => { setFilterType("CA"); setFilterOpen(false); }}
                 >
                   Continuidad (CA)
                 </button>
-                <button type="button" className={`hdFilterItem ${filterType === "PF" ? "active" : ""}`}
+                <button
+                  type="button"
+                  className={`hdFilterItem ${filterType === "PF" ? "active" : ""}`}
                   onClick={() => { setFilterType("PF"); setFilterOpen(false); }}
                 >
                   Presencia Física (PF)
                 </button>
-                <button type="button" className={`hdFilterItem ${filterType === "LOC" ? "active" : ""}`}
+                <button
+                  type="button"
+                  className={`hdFilterItem ${filterType === "LOC" ? "active" : ""}`}
                   onClick={() => { setFilterType("LOC"); setFilterOpen(false); }}
                 >
                   Localizada (LOC)
@@ -206,11 +361,11 @@ export default function HomeDashboard() {
             )}
 
             {/* NUEVA GUARDIA */}
-            {/* <button className="hdBtn primary" type="button" onClick={() => openNewGuardiaModal()}>
+            <button className="hdBtn primary" type="button" onClick={() => openNewGuardiaModal()}>
               <span className="material-icons-outlined">add</span>
               <span className="hideOnMobile">Nueva Guardia</span>
               <span className="showOnMobile">Crear</span>
-            </button> */}
+            </button>
           </div>
         </div>
 
@@ -245,7 +400,6 @@ export default function HomeDashboard() {
                 );
               }}
               dateClick={(info) => {
-                // click en día -> abre modal y prellena fecha
                 openNewGuardiaModal(info.dateStr);
               }}
               eventClick={(info) => {
@@ -279,24 +433,36 @@ export default function HomeDashboard() {
 
               <label className="hdField">
                 <span>Fecha</span>
-                <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} className="hdControl" />
-              </label>
-
-              <label className="hdField">
-                <span>Todo el día</span>
                 <input
-                  type="checkbox"
-                  checked={newAllDay}
-                  onChange={(e) => setNewAllDay(e.target.checked)}
+                  type="date"
+                  value={newDate}
+                  onChange={(e) => setNewDate(e.target.value)}
+                  className="hdControl"
                 />
               </label>
 
-              {!newAllDay && (
-                <label className="hdField">
-                  <span>Hora</span>
-                  <input type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)} className="hdControl" />
-                </label>
-              )}
+              {/* NUEVO: Nombre */}
+              <label className="hdField">
+                <span>Nombre</span>
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="hdControl"
+                  placeholder="Ej: María López"
+                />
+              </label>
+
+              {/* Siempre mostramos Hora (ya no existe Todo el día) */}
+              <label className="hdField">
+                <span>Hora</span>
+                <input
+                  type="time"
+                  value={newTime}
+                  onChange={(e) => setNewTime(e.target.value)}
+                  className="hdControl"
+                />
+              </label>
             </div>
 
             <div className="hdModalFooter">
@@ -333,8 +499,6 @@ export default function HomeDashboard() {
           </div>
         </div>
       </section>
-
-
     </div>
   );
 }

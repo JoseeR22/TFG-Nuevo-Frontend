@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import "../styles/CalculosDocumentos.css";
-import Header from "../components/Header";
 import "../styles/AppLayout.css";
 
 export default function CalculosDocumentos() {
@@ -71,7 +70,6 @@ const resumen = useMemo(
 
     return (
         <div className="cdPage">
-           <Header />
 
             <main className="cdMain">
                 {/* Selectores */}

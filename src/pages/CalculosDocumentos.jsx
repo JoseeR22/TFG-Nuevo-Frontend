@@ -9,7 +9,7 @@ export default function CalculosDocumentos() {
     // Mock: totales (luego lo calculas con tus datos reales)
 const resumen = useMemo(
   () => ({
-    horasTotales: 106,
+    horasTotales: 51,
     ca: "20h",
     pf: "22h",
     loc: "9h",

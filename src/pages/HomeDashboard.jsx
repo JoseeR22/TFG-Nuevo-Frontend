@@ -3,7 +3,6 @@ import "../styles/HomeDashboard.css";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
-// import Header from "../components/Header";
 
 export default function HomeDashboard() {
   const stats = useMemo(
@@ -287,7 +286,7 @@ export default function HomeDashboard() {
                 />
               </label>
 
-              {/* ✅ NUEVO: Nombre */}
+              {/* NUEVO: Nombre */}
               <label className="hdField">
                 <span>Nombre</span>
                 <input
@@ -299,7 +298,7 @@ export default function HomeDashboard() {
                 />
               </label>
 
-              {/* ✅ Siempre mostramos Hora (ya no existe Todo el día) */}
+              {/* Siempre mostramos Hora (ya no existe Todo el día) */}
               <label className="hdField">
                 <span>Hora</span>
                 <input

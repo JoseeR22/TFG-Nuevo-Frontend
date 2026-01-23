@@ -98,7 +98,7 @@ export default function AppLayout() {
 
       {/* Derecha */}
       <div className="appBody">
-        {/* ✅ 3) Aquí ya existe "user" */}
+        {/* 3) Aquí ya existe "user" */}
         <Header
           onMenuClick={() => setOpen(true)}
           user={user}

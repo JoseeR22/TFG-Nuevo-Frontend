@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import "../styles/GestionGuardias.css";
-// import Header from "../components/Header";
 
 export default function GestionGuardias() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -63,8 +62,6 @@ export default function GestionGuardias() {
 
   return (
     <div className="ggPage">
-      {/* HEADER */}
-      {/* <Header /> */}
 
       {/* MAIN */}
       <main className="ggMain">

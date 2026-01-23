@@ -11,7 +11,7 @@ export default function Login() {
     function onSubmit(e) {
         e.preventDefault();
 
-        // ✅ Guardamos un objeto JSON (lo que AppLayout/Header esperan)
+        // Guardamos un objeto JSON (lo que AppLayout/Header esperan)
         const authPayload = {
             name: username.trim() || "Usuario",
             email: `${(username.trim() || "usuario").toLowerCase()}@gmail.com`,

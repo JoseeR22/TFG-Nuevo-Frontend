@@ -14,7 +14,7 @@ export default function Login() {
         // ✅ Guardamos un objeto JSON (lo que AppLayout/Header esperan)
         const authPayload = {
             name: username.trim() || "Usuario",
-            email: `${(username.trim() || "usuario").toLowerCase()}@demo.com`,
+            email: `${(username.trim() || "usuario").toLowerCase()}@gmail.com`,
             avatarUrl: "", // si algún día tienes URL real, la pones aquí
             // token: "demo-token" // opcional, por si luego lo usas
         };

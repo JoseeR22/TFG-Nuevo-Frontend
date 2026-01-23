@@ -3,7 +3,7 @@ import "./style/Footer.css";
 
 export default function Footer({
     year = new Date().getFullYear(),
-    org = "Empresa colaboradora con la Junta de Andalucía",
+    org = "GuardiApp",
 }) {
     return (
         <footer className="loginFooter">

@@ -1,4 +1,3 @@
-
 import "../styles/Legal.css";
 
 export default function Legal() {

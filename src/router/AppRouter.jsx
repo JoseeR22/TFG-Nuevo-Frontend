@@ -8,7 +8,7 @@ import Calculos from "../pages/CalculosDocumentos";
 
 // Nuevas páginas legales
 import AvisoLegal from "../pages/AvisoLegal";
-//import Privacidad from "../pages/Privacidad";
+import Privacidad from "../pages/Privacidad";
 
 // import PanelAdmin from "../pages/PanelAdministracion";
 
@@ -26,7 +26,7 @@ export default function AppRouter() {
 
         {/* Legales (también dentro del layout para mantener header/sidebar) */}
         <Route path="/aviso-legal" element={<AvisoLegal />} />
-        {/*<Route path="/privacidad" element={<Privacidad />} />*/}
+        <Route path="/privacidad" element={<Privacidad />} />
 
         {/* <Route path="/panelAdmin" element={<PanelAdmin />} /> */}
       </Route>

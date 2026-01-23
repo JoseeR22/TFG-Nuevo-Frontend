@@ -196,6 +196,30 @@ html{
 .submitBtn:active {
     transform: scale(0.985);
 }
+.loginFooter {
+    margin-top: 22px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.footerLinks {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+}
+
+.footerLinks a {
+    color: #9ca3af;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.footerLinks a:hover {
+    color: #4b5563;
+    text-decoration: underline;
+}
 
 /* ====== RESPONSIVE ====== */
 @media (max-width: 600px) {

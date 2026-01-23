@@ -74,9 +74,9 @@ export default function AppLayout() {
             <span>Cálculos y Documentos</span>
           </NavLink>
 
-          {/* <NavLink to="/panelAdmin" onClick={closeMenu} className={({ isActive }) => `appNavItem ${isActive ? "active" : ""}`}>
+          {/* <NavLink to="/Privacidad" onClick={closeMenu} className={({ isActive }) => `appNavItem ${isActive ? "active" : ""}`}>
             <span className="material-symbols-outlined">productivity</span>
-            <span>Panel de Administración</span>
+            <span>Privacidad</span>
           </NavLink> */}
 
           <div className="appNavDivider" />
@@ -111,9 +111,8 @@ export default function AppLayout() {
         <main className="appMain" onClick={() => open && closeMenu()}>
           <Outlet />
         </main>
-
+        <Footer />
       </div>     
-         
     </div>
     
   );

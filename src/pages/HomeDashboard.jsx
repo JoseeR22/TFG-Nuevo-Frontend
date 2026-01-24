@@ -4,6 +4,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 
+
 export default function HomeDashboard() {
   const stats = useMemo(
     () => [
@@ -13,6 +14,73 @@ export default function HomeDashboard() {
     ],
     []
   );
+  //mio
+  function isExcelFile(file) {
+  if (!file) return false;
+  
+  // Verificar extensión del archivo
+  const validExtensions = ['.xls', '.xlsx'];
+  const hasValidExtension = validExtensions.some(ext => 
+    file.name && file.name.toLowerCase().endsWith(ext)
+  );
+  
+  // Verificar tipo MIME
+  const validMimeTypes = [
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-excel.sheet.macroEnabled.12',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.template'
+  ];
+  const hasValidMimeType = validMimeTypes.includes(file.type);
+  
+  return hasValidExtension || hasValidMimeType;
+}
+
+async function importDutysExcel({ file, year, month, idSpeciality }) {
+  if (!file) {
+    setImportMsg("No se ha seleccionado ningún archivo");
+    return;
+  }
+
+  if (!year || !month || !idSpeciality) {
+    setImportMsg("Por favor, seleccione año, mes y especialidad");
+    return;
+  }
+
+  try {
+    setImportMsg("Procesando archivo...");
+    
+    // Crear FormData para enviar el archivo
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('year', year);
+    formData.append('month', month);
+    formData.append('idSpeciality', idSpeciality);
+    
+    // Hacer la llamada a la API
+    const response = await fetch('/api/import-dutys', {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      setImportMsg("Archivo importado correctamente");
+      // Limpiar el archivo seleccionado
+      setExcelFile(null);
+      // Opcional: recargar la lista de duties
+      // loadDutys();
+    } else {
+      setImportMsg(result.message || "Error al importar el archivo");
+    }
+  } catch (error) {
+    console.error('Error importing Excel:', error);
+    setImportMsg("Error al importar el archivo: " + error.message);
+  }
+}
+
+
 
   // ===== FullCalendar control (mes arriba + prev/next) =====
   const calendarRef = useRef(null);
@@ -115,7 +183,7 @@ export default function HomeDashboard() {
   const [importOpen, setImportOpen] = useState(false);
 
   // Especialidades (para el select)
-  const [specialities, setSpecialities] = useState([]);
+
   const [specialitiesLoading, setSpecialitiesLoading] = useState(false);
   const [specialitiesError, setSpecialitiesError] = useState("");
 
@@ -179,14 +247,7 @@ export default function HomeDashboard() {
     // Cargar especialidades desde SERVICE
     setSpecialitiesLoading(true);
     setSpecialitiesError("");
-    try {
-      const list = await getSpecialities({ onlyActive: true });
-      setSpecialities(list);
-    } catch (e) {
-      setSpecialitiesError(e.message);
-    } finally {
-      setSpecialitiesLoading(false);
-    }
+    
   }
 
   function closeImportModal() {
@@ -529,7 +590,7 @@ export default function HomeDashboard() {
                 ) : specialitiesError ? (
                   <div className="hdControl">{specialitiesError}</div>
                 ) : (
-                  <select
+                  {/* <select //tocar 
                     className="hdControl"
                     value={idSpeciality}
                     onChange={(e) => setIdSpeciality(e.target.value)}
@@ -540,7 +601,7 @@ export default function HomeDashboard() {
                         {s.name} (id: {s.id})
                       </option>
                     ))}
-                  </select>
+                  </select> */}
                 )}
               </label>
 

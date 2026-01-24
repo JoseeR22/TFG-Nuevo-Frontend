@@ -1,6 +1,8 @@
 import { useState } from "react";
 import "../styles/Login.css";
 import { useNavigate } from "react-router-dom";
+import { login } from "../services/AuthService";
+
 
 export default function Login() {
     const [username, setUsername] = useState("");
@@ -8,7 +10,7 @@ export default function Login() {
 
     const navigate = useNavigate();
 
-    function onSubmit(e) {
+    async function onSubmit(e) {
         e.preventDefault();
 
         // Guardamos un objeto JSON (lo que AppLayout/Header esperan)
@@ -16,8 +18,10 @@ export default function Login() {
             name: username.trim() || "Usuario",
             email: `${(username.trim() || "usuario").toLowerCase()}@gmail.com`,
             avatarUrl: "", // si algún día tienes URL real, la pones aquí
-            // token: "demo-token" // opcional, por si luego lo usas
+
         };
+        const token = await login(authPayload)
+        localStorage.setItem("token",token.auth.access_token)
 
         localStorage.setItem("auth", JSON.stringify(authPayload));
 

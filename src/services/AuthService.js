@@ -1,11 +1,12 @@
-const MAIN_URL = "https://daw11.arenadaw.com.es/api"
+const MAIN_URL = "/api"
 
 export async function login(user){
     try {
     let response = await fetch(`${MAIN_URL}/login`,{
         method: 'POST',
         headers: {
-            'Content-Type':'application/json'
+            'Content-Type':'application/json',
+            "Accept": "application/json",
         },
         body: JSON.stringify(user)
     })

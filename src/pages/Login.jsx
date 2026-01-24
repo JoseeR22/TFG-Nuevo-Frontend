@@ -10,7 +10,7 @@ export default function Login() {
 
     const navigate = useNavigate();
 
-    function onSubmit(e) {
+    async function onSubmit(e) {
         e.preventDefault();
 
         // Guardamos un objeto JSON (lo que AppLayout/Header esperan)
@@ -20,7 +20,7 @@ export default function Login() {
             avatarUrl: "", // si algún día tienes URL real, la pones aquí
 
         };
-        const token = login(authPayload)
+        const token = await login(authPayload)
         localStorage.setItem("token",token.auth.access_token)
 
         localStorage.setItem("auth", JSON.stringify(authPayload));

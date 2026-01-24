@@ -1,4 +1,4 @@
-const MAIN_URL = "https://daw11.arenadaw.com.es/api/"
+const MAIN_URL = "https://daw11.arenadaw.com.es/api"
 
 export async function login(user){
     try {

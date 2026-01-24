@@ -20,7 +20,7 @@ export default function Header({ onMenuClick, user, onLogout, onProfile }) {
     return (
         <header className="cdHeader">
             <div className="cdHeaderInner">
-                {/* IZQUIERDA: hamburguesa SOLO móvil */}
+                {/* IZQUIERDA: hamburguesa móvil */}
                 <div className="cdHeaderLeft">
                     <button
                         className="cdIconBtn cdMenuBtn"
@@ -73,6 +73,7 @@ export default function Header({ onMenuClick, user, onLogout, onProfile }) {
                                         {user?.email && <div className="cdMenuEmail">{user.email}</div>}
                                     </div>
 
+                            {/* en algun momento lo metemos
                                     <button
                                         className="cdMenuItem"
                                         type="button"
@@ -94,7 +95,7 @@ export default function Header({ onMenuClick, user, onLogout, onProfile }) {
                                     >
                                         <span className="material-icons-outlined">settings</span>
                                         Ajustes
-                                    </button>
+                                    </button> */}
 
                                     <div className="cdMenuDivider" />
 

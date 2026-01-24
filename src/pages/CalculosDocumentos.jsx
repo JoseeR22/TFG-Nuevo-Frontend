@@ -1,62 +1,111 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import "../styles/CalculosDocumentos.css";
 import "../styles/AppLayout.css";
+import { getWorkers, getAdmins } from "../services/userService";
 
 export default function CalculosDocumentos() {
-    const [profesional, setProfesional] = useState("Juan Gómez");
-    const [mes, setMes] = useState("Abril 2024");
-
-    // Mock: totales (luego lo calculas con tus datos reales)
-const resumen = useMemo(
-  () => ({
-    horasTotales: 51,
-    ca: "20h",
-    pf: "22h",
-    loc: "9h",
-  }),
-  []
-);
+    // ver trabajadores y admins
+    const [view, setView] = useState("workers");
 
 
-    const daysHeader = ["L", "M", "X", "J", "V", "S", "D"];
+    //para gettear los trabalhadores y users 
 
-    const calendarCells = useMemo(
-        () => [
-            { day: 29, off: true },
-            { day: 30, off: true },
-            { day: 31, off: true },
+    const [workers, setWorkers] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-            { day: 1 },
-            { day: 2, tag: "CA" },
-            { day: 3, tag: "PF" },
-            { day: 4 },
+    const [admins, setAdmins] = useState([]);
+    const [adminsLoading, setAdminsLoading] = useState(false);
+    const [adminsError, setAdminsError] = useState("");
 
-            { day: 5 },
-            { day: 6, tag: "CA" },
-            { day: 7 },
-            { day: 8, tag: "LOC" },
-            { day: 9 },
-            { day: 10, tag: "CA" },
-            { day: 11 },
 
-            { day: 12 },
-            { day: 13, tag: "PF" },
-            { day: 14, tag: "CA" },
-            { day: 15, tag: "CA", selected: true },
-            { day: 16 },
-            { day: 17 },
-            { day: 18 },
+    async function loadWorkers() {
+        setLoading(true);
+        setError("");
+        try {
+            const data = await getWorkers();
+            setWorkers(data);
+        } catch (e) {
+            setError(e.message || "Error desconocido");
+        } finally {
+            setLoading(false);
+        }
+    }
+    useEffect(() => {
+        if (view === "workers") {
+            loadWorkers();
+        } else {
+            loadAdmins();
+        }
+    }, [view]);
 
-            { day: 19 },
-            { day: 20 },
-            { day: 21, tag: "LOC" },
-            { day: 22 },
-            { day: 23, tag: "CA" },
-            { day: 24 },
-            { day: 25 },
-        ],
-        []
-    );
+
+    async function loadAdmins() {
+        setAdminsLoading(true);
+        setAdminsError("");
+        try {
+            const data = await getAdmins();
+            setAdmins(data);
+        } catch (e) {
+            setAdminsError(e.message || "Error desconocido");
+        } finally {
+            setAdminsLoading(false);
+        }
+    }
+
+
+    // clases botones 
+    let workersBtnClass = "cdToggleBtn";
+    let adminsBtnClass = "cdToggleBtn";
+
+    if (view === "workers") {
+        workersBtnClass += " isActive";
+    } else {
+        adminsBtnClass += " isActive";
+    }
+
+    // tabla 
+    let title = "";
+    let headers = [];
+    let colSpan = 0;
+    let rows = [];
+
+    if (view === "workers") {
+        title = "Trabajadores";
+        headers = ["ID", "Nombre", "Rango", "Alta", "Baja", "Especialidad"];
+        colSpan = 6;
+        rows = workers;
+    } else {
+        title = "Administradores";
+        headers = ["ID", "Nombre", "Email", "Creado"];
+        colSpan = 4;
+        rows = admins;
+    }
+
+    // filas
+    let tableRows = null;
+
+    if (view === "workers") {
+        tableRows = rows.map((w) => (
+            <tr key={w.id}>
+                <td>{w.id}</td>
+                <td>{w.name}</td>
+                <td>{w.rank}</td>
+                <td>{w.registration_date}</td>
+                <td>{w.discharge_date ?? "-"}</td>
+                <td>{w.id_speciality}</td>
+            </tr>
+        ));
+    } else {
+        tableRows = rows.map((a) => (
+            <tr key={a.id}>
+                <td>{a.id}</td>
+                <td>{a.name}</td>
+                <td>{a.email}</td>
+                <td>{a.created_at}</td>
+            </tr>
+        ));
+    }
 
     function downloadMock(name) {
         const blob = new Blob([`Mock file: ${name}`], { type: "text/plain" });
@@ -70,133 +119,53 @@ const resumen = useMemo(
 
     return (
         <div className="cdPage">
-
             <main className="cdMain">
-                {/* Selectores */}
-                <div className="cdFilters">
-                    <div className="cdSelectWrap">
-                        <span className="material-icons cdSelectIcon">person</span>
-                        <select
-                            className="cdSelect"
-                            value={profesional}
-                            onChange={(e) => setProfesional(e.target.value)}
-                            aria-label="Seleccionar profesional"
-                        >
-                            <option>Juan Gómez</option>
-                            <option>Ana Sánchez</option>
-                            <option>Pedro Martinez</option>
-                        </select>
-                        <span className="material-icons cdSelectChevron">expand_more</span>
-                    </div>
+                <div className="cdToggle">
+                    <button
+                        className={workersBtnClass}
+                        type="button"
+                        onClick={() => setView("workers")}
+                    >
+                        Ver trabajadores
+                    </button>
 
-                    <div className="cdSelectWrap">
-                        <span className="material-icons cdSelectIcon">calendar_today</span>
-                        <select
-                            className="cdSelect"
-                            value={mes}
-                            onChange={(e) => setMes(e.target.value)}
-                            aria-label="Seleccionar mes"
-                        >
-                            <option>Abril 2024</option>
-                            <option>Marzo 2024</option>
-                            <option>Febrero 2024</option>
-                        </select>
-                        <span className="material-icons cdSelectChevron">expand_more</span>
-                    </div>
+                    <button
+                        className={adminsBtnClass}
+                        type="button"
+                        onClick={() => setView("admins")}
+                    >
+                        Ver administradores
+                    </button>
                 </div>
 
-                {/* Calendario */}
-                <section className="cdCard">
-                    <div className="cdCardHead">
-                        <button className="cdIconBtn" aria-label="Mes anterior" type="button">
-                            <span className="material-icons">chevron_left</span>
-                        </button>
+                <h3 className="cdSectionTitle">{title}</h3>
 
-                        <h2 className="cdCardHeadTitle">{mes}</h2>
+                {view === "workers" && loading && <p>Cargando trabajadores...</p>}
+                {view === "workers" && error && <p className="cdError">{error}</p>}
 
-                        <button className="cdIconBtn" aria-label="Mes siguiente" type="button">
-                            <span className="material-icons">chevron_right</span>
-                        </button>
-                    </div>
+                {view === "admins" && adminsLoading && <p>Cargando administradores...</p>}
+                {view === "admins" && adminsError && <p className="cdError">{adminsError}</p>}
 
-                    <div className="cdDow">
-                        {daysHeader.map((d) => (
-                            <div key={d}>{d}</div>
-                        ))}
-                    </div>
+                <table className="cdTable">
+                    <thead>
+                        <tr>
+                            {headers.map((header) => (
+                                <th key={header}>{header}</th>
+                            ))}
+                        </tr>
+                    </thead>
 
-                    <div className="cdGrid" role="grid" aria-label="Calendario por profesional">
-                        {calendarCells.map((c, idx) => (
-                            <div
-                                key={idx}
-                                className={[
-                                    "cdCell",
-                                    c.off ? "off" : "",
-                                    c.selected ? "selected" : "",
-                                ].join(" ")}
-                            >
-                                <div className="cdDay">{c.day}</div>
-                                {c.tag && (
-                                    <div
-                                        className={[
-                                            "cdTag",
-                                            c.tag === "CA" ? "ca" : "",
-                                            c.tag === "PF" ? "pf" : "",
-                                            c.tag === "LOC" ? "loc" : "",
-                                        ].join(" ")}
-                                    >
-                                        {c.tag}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </section>
+                    <tbody>
+                        {rows.length === 0 && (
+                            <tr>
+                                <td colSpan={colSpan}>No hay datos</td>
+                            </tr>
+                        )}
 
-                {/* Resumen */}
-                <section className="cdCard cdSummary">
-                    <div className="cdSummaryTop">
-                        <div>
-                            <div className="cdMuted">Horas Totales</div>
-                            <div className="cdHours">
-                                <span className="cdHoursNum">{resumen.horasTotales}</span>
-                                <span className="cdHoursUnit">horas</span>
-                            </div>
-                        </div>
+                        {tableRows}
+                    </tbody>
+                </table>
 
-                        <div className="cdSummaryIcon">
-                            <span className="material-icons">access_time_filled</span>
-                        </div>
-                    </div>
-
-                    <div className="cdBreakdown">
-                        <div className="cdRow">
-                            <div className="cdRowLeft">
-                                <span className="dot ca" />
-                                <span>CA (Continuidad)</span>
-                            </div>
-                            <div className="cdRowRight">{resumen.ca}</div>
-                        </div>
-
-                        <div className="cdRow">
-                            <div className="cdRowLeft">
-                                <span className="dot pf" />
-                                <span>PF (Presencia Física)</span>
-                            </div>
-                            <div className="cdRowRight">{resumen.pf}</div>
-                        </div>
-
-                        <div className="cdRow">
-                            <div className="cdRowLeft">
-                                <span className="dot loc" />
-                                <span>LOC (Localizada)</span>
-                            </div>
-                            <div className="cdRowRight">{resumen.loc}</div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Acciones */}
                 <div className="cdActions">
                     <button
                         className="cdBtnSecondary"

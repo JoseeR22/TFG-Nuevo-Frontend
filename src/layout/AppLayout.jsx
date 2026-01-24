@@ -74,11 +74,6 @@ export default function AppLayout() {
             <span>Cálculos y Documentos</span>
           </NavLink>
 
-          {/* <NavLink to="/Privacidad" onClick={closeMenu} className={({ isActive }) => `appNavItem ${isActive ? "active" : ""}`}>
-            <span className="material-symbols-outlined">productivity</span>
-            <span>Privacidad</span>
-          </NavLink> */}
-
           <div className="appNavDivider" />
 
           <button

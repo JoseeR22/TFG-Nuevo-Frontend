@@ -438,13 +438,129 @@ body {
     color: #2563EB;
 }
 
+/*Apartado nuevo 24/01*/
+
+/* Toggle (Trabajadores / Administradores) */
+.cdToggle {
+    display: flex;
+    gap: 12px;
+}
+
+.cdToggleBtn {
+    flex: 1;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: #374151;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.cdToggleBtn:hover {
+    background: #F9FAFB;
+}
+
+.cdToggleBtn.isActive {
+    background: rgba(0, 112, 65, .10);
+    border-color: rgba(0, 112, 65, .45);
+    color: var(--primary);
+    box-shadow: inset 0 0 0 1px rgba(0, 112, 65, .25), var(--shadow-soft);
+}
+
+
+/* Toggle (Trabajadores / Administradores) */
+.cdToggle {
+    display: flex;
+    gap: 12px;
+}
+
+.cdToggleBtn {
+    flex: 1;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: #374151;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.cdToggleBtn:hover {
+    background: #F9FAFB;
+}
+
+.cdToggleBtn.isActive {
+    background: rgba(0, 112, 65, .10);
+    border-color: rgba(0, 112, 65, .45);
+    color: var(--primary);
+    box-shadow: inset 0 0 0 1px rgba(0, 112, 65, .25), var(--shadow-soft);
+}
+
+/*css de las tablas */
+
+.cdTableGeneral {
+    display: grid;
+    gap: 10px;
+}
+
+.cdSectionTitle {
+    margin: 6px 0 0;
+    font-size: 14px;
+    font-weight: 900;
+    color: #111827;
+}
+
+.cdTable {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    overflow: hidden;
+    box-shadow: var(--shadow-soft);
+}
+
+.cdTable thead th {
+    text-align: left;
+    font-size: 12px;
+    color: #6B7280;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    background: #F9FAFB;
+}
+
+.cdTable tbody td {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(229, 231, 235, .7);
+    font-size: 13px;
+    color: #374151;
+}
+
+.cdTable tbody tr:hover {
+    background: #F9FAFB;
+}
+
+.cdError {
+    color: #dc2626;
+    font-weight: 700;
+}
+
 /* Responsive */
 @media (max-width: 560px) {
     .cdMain {
         padding: 14px 14px 84px;
     }
 
-    .cdFilters {
-        grid-template-columns: 1fr 1fr;
-    }
+
 }

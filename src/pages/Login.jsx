@@ -18,9 +18,14 @@ export default function Login() {
             name: username.trim() || "Usuario",
             email: `${(username.trim() || "usuario").toLowerCase()}@gmail.com`,
             avatarUrl: "", // si algún día tienes URL real, la pones aquí
-
         };
-        const token = await login(authPayload)
+
+        const user = {
+            email:username,
+            password: password
+        }
+        
+        const token = await login(user)
         localStorage.setItem("token",token.auth.access_token)
 
         localStorage.setItem("auth", JSON.stringify(authPayload));

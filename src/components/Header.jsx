@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import "../components/style/Header.css";
+import { useNotifications } from "../context/NotificationsContext";
 
 function getInitials(name = "") {
     const clean = name.trim();
@@ -12,6 +13,8 @@ function getInitials(name = "") {
 
 export default function Header({ onMenuClick, user, onLogout, onProfile }) {
     const [menuOpen, setMenuOpen] = useState(false);
+    const { items, unreadCount, markAllRead, clearAll } = useNotifications();
+    const [notifOpen, setNotifOpen] = useState(false);
 
     const displayName = user?.name ?? "Usuario";
     const avatarUrl = user?.avatarUrl ?? "";
@@ -42,9 +45,56 @@ export default function Header({ onMenuClick, user, onLogout, onProfile }) {
 
                 {/* DERECHA */}
                 <div className="cdHeaderRight">
-                    <button className="cdIconBtn cdNotifBtn" aria-label="Notificaciones" type="button">
-                        <span className="material-icons-outlined">notifications</span>
-                    </button>
+                    <div className="cdNotifWrap">
+                        <button
+                            className="cdIconBtn cdNotifBtn"
+                            aria-label="Notificaciones"
+                            type="button"
+                            aria-haspopup="menu"
+                            aria-expanded={notifOpen}
+                            onClick={() => {
+                                setNotifOpen((v) => !v);
+                                // si lo abres, marca como leído
+                                if (!notifOpen) markAllRead();
+                            }}
+                        >
+                            <span className="material-icons-outlined">notifications</span>
+
+                            {unreadCount > 0 && (
+                                <span className="cdNotifBadge" aria-label={`${unreadCount} notificaciones sin leer`}>
+                                    {unreadCount > 9 ? "9+" : unreadCount}
+                                </span>
+                            )}
+                        </button>
+
+                        {notifOpen && (
+                            <>
+                                <div className="cdMenuOverlay" onClick={() => setNotifOpen(false)} />
+
+                                <div className="cdNotifMenu" role="menu" aria-label="Lista de notificaciones">
+                                    <div className="cdNotifHeader">
+                                        <div className="cdNotifTitle">Notificaciones</div>
+                                        <button className="cdNotifClear" type="button" onClick={clearAll}>
+                                            Limpiar
+                                        </button>
+                                    </div>
+
+                                    {items.length === 0 ? (
+                                        <div className="cdNotifEmpty">No hay notificaciones.</div>
+                                    ) : (
+                                        <div className="cdNotifList">
+                                            {items.slice(0, 6).map((n) => (
+                                                <div className="cdNotifItem" key={n.id}>
+                                                    <div className="cdNotifText">{n.text}</div>
+                                                    <div className="cdNotifTime">a las {n.time}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </div>
 
                     <div className="cdAvatarWrap">
                         <button

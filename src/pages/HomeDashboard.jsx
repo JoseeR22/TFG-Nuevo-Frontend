@@ -3,6 +3,7 @@ import "../styles/HomeDashboard.css";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import { useNotifications } from "../context/NotificationsContext";
 
 
 export default function HomeDashboard() {
@@ -112,18 +113,18 @@ async function importDutysExcel({ file, year, month, idSpeciality }) {
   const baseEvents = useMemo(
     () => [
       // CA (Continuidad)
-      { id: "1", title: "CA 15:00 - Antonio Ramon", start: "2024-04-01T15:00:00", extendedProps: { type: "CA" } },
-      { id: "2", title: "CA 15:00 - Raul Henares", start: "2024-04-04T15:00:00", extendedProps: { type: "CA" }, },
-      { id: "3", title: "CA 19:00 - Kike Paez", start: "2024-04-04T19:00:00", extendedProps: { type: "CA" } },
-      { id: "4", title: "CA 12:00 - Samuel Peña", start: "2024-04-08T12:00:00", extendedProps: { type: "CA" } },
+      { id: "1", title: "Anestesia CA 15:00 - Antonio Ramon", start: "2024-04-01T15:00:00", extendedProps: { type: "CA" } },
+      { id: "2", title: "Cirugía CA 15:00 - Raul Henares", start: "2024-04-04T15:00:00", extendedProps: { type: "CA" }, },
+      { id: "3", title: "Cirugía CA 19:00 - Kike Paez", start: "2024-04-04T19:00:00", extendedProps: { type: "CA" } },
+      { id: "4", title: "Cirugía CA 12:00 - Samuel Peña", start: "2024-04-08T12:00:00", extendedProps: { type: "CA" } },
 
       // PF (Presencia Física)
-      { id: "5", title: "PF 24h - Javier Juarez", start: "2024-04-02", allDay: true, extendedProps: { type: "PF" } },
-      { id: "6", title: "PF 10h - Jose Ramon", start: "2024-04-05", allDay: true, extendedProps: { type: "PF" } },
-      { id: "7", title: "PF 24h - Javier Ruiz", start: "2024-04-10", allDay: true, extendedProps: { type: "PF" } },
+      { id: "5", title: "Anestesia PF 24h - Javier Juarez", start: "2024-04-02", allDay: true, extendedProps: { type: "PF" } },
+      { id: "6", title: "Anestesia PF 10h - Jose Ramon", start: "2024-04-05", allDay: true, extendedProps: { type: "PF" } },
+      { id: "7", title: "Anestesia PF 24h - Javier Ruiz", start: "2024-04-10", allDay: true, extendedProps: { type: "PF" } },
 
       // LOC (Localizada)
-      { id: "8", title: "LOC 8:00 - Antonio Moyano", start: "2024-04-03T08:00:00", extendedProps: { type: "LOC", jefe: true } },
+      { id: "8", title: "Anestesia LOC 8:00 - Antonio Moyano", start: "2024-04-03T08:00:00", extendedProps: { type: "LOC", jefe: true } },
     ],
     []
   );
@@ -146,6 +147,7 @@ async function importDutysExcel({ file, year, month, idSpeciality }) {
   const [newDate, setNewDate] = useState("2024-04-01");  // YYYY-MM-DD
   const [newTime, setNewTime] = useState("15:00");       // HH:mm
   const [newName, setNewName] = useState("");
+  const [newSpecialty, setNewSpecialty] = useState("Anestesia");
 
   function openNewGuardiaModal(prefilledDate) {
     // Si haces click en día, lo prellenamos
@@ -154,17 +156,17 @@ async function importDutysExcel({ file, year, month, idSpeciality }) {
     setNewOpen(true);
   }
 
-  function addGuardia() {
-    //  Siempre con hora (sin allDay)
-    const start = `${newDate}T${newTime}:00`;
+  const { addNotification } = useNotifications();
 
-    // Título con nombre si existe
+  function addGuardia() {
+    const start = `${newDate}T${newTime}:00`;
+  
     const baseTitle = `${newType} ${newTime}`;
     const nameClean = newName.trim();
     const title = nameClean ? `${baseTitle} - ${nameClean}` : baseTitle;
-
+  
     const id = crypto?.randomUUID ? crypto.randomUUID() : String(Date.now());
-
+  
     setEvents((prev) => [
       ...prev,
       {
@@ -175,7 +177,10 @@ async function importDutysExcel({ file, year, month, idSpeciality }) {
         extendedProps: { type: newType, name: nameClean },
       },
     ]);
-
+  
+    // NOTIFICACIÓN
+    addNotification(`Se ha agregado una nueva guardia (${title}).`);
+  
     setNewOpen(false);
   }
 
@@ -512,6 +517,20 @@ async function importDutysExcel({ file, year, month, idSpeciality }) {
                   className="hdControl"
                   placeholder="Ej: María López"
                 />
+              </label>
+              {/* NUEVO: Tipo */}
+
+              <label className="hdField">
+                <span>Tipo</span>
+                <select value={newSpecialty} onChange={(e) => setNewSpecialty(e.target.value)} className="hdControl">
+                  <option value="Anestesia">Anestesia</option>
+                  <option value="Cirugía">Cirugía</option>
+                  <option value="Algo mas">Radiologia</option>
+                  <option value="Medicina Intensiva">Medicina Intensiva</option>
+                  <option value="Medicina Interna">Medicina Interna</option>
+                  <option value="Cirugia General">Cirugia General</option>
+                  <option value="Pediatria">Pediatria</option>
+                </select>
               </label>
 
               {/* Siempre mostramos Hora (ya no existe Todo el día) */}

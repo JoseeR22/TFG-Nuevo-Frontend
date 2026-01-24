@@ -205,3 +205,102 @@
     z-index: 150;
     background: transparent;
 }
+
+.cdNotifWrap {
+    position: relative;
+    display: inline-flex;
+}
+
+.cdNotifBtn {
+    position: relative;
+}
+
+.cdNotifBadge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #ef4444;
+    /* rojo */
+    color: #fff;
+    font-size: 11px;
+    font-weight: 900;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .18);
+    border: 2px solid rgba(255, 255, 255, .65);
+}
+
+.cdNotifMenu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    width: 320px;
+    max-width: calc(100vw - 24px);
+    background: #fff;
+    color: #111827;
+    border-radius: 14px;
+    border: 1px solid rgba(0, 0, 0, .10);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, .18);
+    overflow: hidden;
+    z-index: 200;
+}
+
+.cdNotifHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, .08);
+    background: #f9fafb;
+}
+
+.cdNotifTitle {
+    font-weight: 900;
+}
+
+.cdNotifClear {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-weight: 800;
+    color: rgba(17, 24, 39, .70);
+}
+
+.cdNotifClear:hover {
+    color: rgba(17, 24, 39, .95);
+}
+
+.cdNotifEmpty {
+    padding: 14px 12px;
+    color: rgba(17, 24, 39, .55);
+    font-weight: 700;
+}
+
+.cdNotifList {
+    max-height: 320px;
+    overflow: auto;
+}
+
+.cdNotifItem {
+    padding: 12px 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, .06);
+}
+
+.cdNotifItem:last-child {
+    border-bottom: none;
+}
+
+.cdNotifText {
+    font-weight: 800;
+    font-size: 13px;
+}
+
+.cdNotifTime {
+    margin-top: 4px;
+    font-size: 12px;
+    color: rgba(17, 24, 39, .55);
+}

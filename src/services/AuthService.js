@@ -14,7 +14,7 @@ export async function login(user){
             throw new Error(`HTTP error! status: ${response.status}`);
 }
 
-        return response.json();
+        return await response.json();
     } catch (error) {
         console.error("Login error:", error);
         throw error;

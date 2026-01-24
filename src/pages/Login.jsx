@@ -21,7 +21,7 @@ export default function Login() {
 
         };
         const token = login(authPayload)
-        localStorage.setItem("token",token)
+        localStorage.setItem("token",token.auth.access_token)
 
         localStorage.setItem("auth", JSON.stringify(authPayload));
 

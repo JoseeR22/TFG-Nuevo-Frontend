@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://daw11.arenadaw.com.es/api";
+const API_BASE_URL = "/api";
 
 
 export async function getWorkers() {

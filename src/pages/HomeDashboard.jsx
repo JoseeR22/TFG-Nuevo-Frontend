@@ -3,6 +3,7 @@ import "../styles/HomeDashboard.css";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import { useNotifications } from "../context/NotificationsContext";
 
 export default function HomeDashboard() {
   const stats = useMemo(
@@ -87,17 +88,17 @@ export default function HomeDashboard() {
     setNewOpen(true);
   }
 
-  function addGuardia() {
-    //  Siempre con hora (sin allDay)
-    const start = `${newDate}T${newTime}:00`;
+  const { addNotification } = useNotifications();
 
-    // Título con nombre si existe
+  function addGuardia() {
+    const start = `${newDate}T${newTime}:00`;
+  
     const baseTitle = `${newType} ${newTime}`;
     const nameClean = newName.trim();
     const title = nameClean ? `${baseTitle} - ${nameClean}` : baseTitle;
-
+  
     const id = crypto?.randomUUID ? crypto.randomUUID() : String(Date.now());
-
+  
     setEvents((prev) => [
       ...prev,
       {
@@ -108,7 +109,10 @@ export default function HomeDashboard() {
         extendedProps: { type: newType, name: nameClean },
       },
     ]);
-
+  
+    // NOTIFICACIÓN
+    addNotification(`Se ha agregado una nueva guardia (${title}).`);
+  
     setNewOpen(false);
   }
 
